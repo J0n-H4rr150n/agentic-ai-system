@@ -3,6 +3,9 @@ import { PaletteManager } from "./palette/index.js";
 import { PALETTE_CATEGORIES } from "./palette/categories.js";
 import { PaletteDragDropHandler } from "./palette/drag.js";
 import { serializeGraph, stringifyGraph } from "./graph/serializer.js";
+import { createRunApi } from "./api/run.js";
+import { createRunController } from "./ui/run-controls.js";
+import { createRunStatusIndicator, RUN_STATUSES } from "./ui/status.js";
 
 function requireElementById(id) {
   const element = document.getElementById(id);
@@ -15,6 +18,9 @@ function requireElementById(id) {
 function init() {
   const paletteRoot = requireElementById("paletteRoot");
   const exportJsonButton = requireElementById("exportJsonButton");
+
+  const runButton = requireElementById("runButton");
+  const runStatus = requireElementById("runStatus");
 
   const canvas = requireElementById("agentCanvas");
   const host = requireElementById("canvasHost");
@@ -36,6 +42,25 @@ function init() {
       wireManager: manager.wireManager,
     });
     downloadTextFile("graph.json", stringifyGraph(graph));
+  });
+
+  const statusIndicator = createRunStatusIndicator({ element: runStatus });
+  const runApi = createRunApi();
+  const controller = createRunController({
+    runApi,
+    getGraph: () =>
+      serializeGraph({
+        nodeManager: manager.nodeManager,
+        wireManager: manager.wireManager,
+      }),
+    onStatus: (status, details) => {
+      statusIndicator.setStatus(status, details);
+      runButton.disabled = status === RUN_STATUSES.RUNNING;
+    },
+  });
+
+  runButton.addEventListener("click", async () => {
+    await controller.runOnce();
   });
 
   const dragDrop = new PaletteDragDropHandler({

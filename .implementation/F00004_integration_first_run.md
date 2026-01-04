@@ -12,7 +12,7 @@ Wire everything together: frontend canvas talks to backend runner, add run contr
 ## Stories
 
 - [x] S001: API Client Module (Frontend)
-- [ ] S002: Run Controls UI (Run button, status indicator)
+- [x] S002: Run Controls UI (Run button, status indicator)
 - [ ] S003: SSE Integration for Real-time Updates
 - [ ] S004: Execution Trace Viewer (GitHub Actions style)
 - [ ] S005: Build Sample Security Workflow
@@ -21,9 +21,9 @@ Wire everything together: frontend canvas talks to backend runner, add run contr
 ## Acceptance Criteria
 
 ### Frontend Integration
-- [ ] API client module handles all backend calls
-- [ ] "Run" button in toolbar sends graph to `/api/run`
-- [ ] Status indicator shows: idle, running, completed, failed
+- [x] API client module handles all backend calls
+- [x] "Run" button in toolbar sends graph to `/api/run`
+- [x] Status indicator shows: idle, running, completed, failed
 - [ ] SSE stream updates UI in real-time as steps execute
 
 ### Execution Trace Viewer

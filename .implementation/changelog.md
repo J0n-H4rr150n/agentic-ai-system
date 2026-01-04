@@ -204,3 +204,9 @@ All notable changes to this project will be documented in this file.
 - Added `frontend/public/js/api/run.js` with helpers for `/api/run` (start/status) and opening `/api/run/{id}/stream`
 - Added a minimal same-origin `/api/*` proxy in the frontend Express server (uses `BACKEND_URL`)
 - Added unit tests for API modules (`node --test`)
+
+### F00004_S002: Run Controls UI (Run button, status indicator)
+
+- Added a minimal toolbar above the canvas with a Run button and status indicator
+- Implemented run control logic: serialize graph, start run, then poll run status until terminal state
+- Added unit tests for run-control and status formatting logic

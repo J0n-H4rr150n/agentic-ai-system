@@ -20,6 +20,10 @@
       </aside>
 
       <main class="workspace" aria-label="Workspace">
+        <div class="toolbar" aria-label="Toolbar">
+          <button class="toolbar-button" id="runButton" type="button">Run</button>
+          <div class="toolbar-status" id="runStatus" aria-live="polite">Status: idle</div>
+        </div>
         <div class="canvas-host" id="canvasHost">
           <canvas id="agentCanvas"></canvas>
         </div>
