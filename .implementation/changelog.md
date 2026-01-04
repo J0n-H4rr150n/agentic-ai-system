@@ -110,3 +110,9 @@ All notable changes to this project will be documented in this file.
 
 - Added `StateContainer` abstraction for runner state with key validation and snapshot/to-dict helpers
 - Added unit tests covering core state behaviors
+
+### F00002_S007: Async Executor with Parallel Support
+
+- Added `AsyncExecutor` that runs dependency-ready nodes concurrently via asyncio
+- Ensured deterministic execution via stable ready ordering and deterministic state merge
+- Added unit tests for parallel readiness and dependency gating
