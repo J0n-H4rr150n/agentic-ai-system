@@ -10,22 +10,16 @@ accumulate multiple saved graph versions.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import datetime, timezone
-import threading
-from uuid import uuid4
+from datetime import datetime
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from backend.models.graph import GraphDefinition
+from backend.workflows.store import WORKFLOW_STORE
 
 
 router = APIRouter()
-
-
-def _now_utc() -> datetime:
-    return datetime.now(timezone.utc)
 
 
 class WorkflowCreateRequest(BaseModel):
@@ -71,51 +65,15 @@ class WorkflowListResponse(BaseModel):
     workflows: list[WorkflowListItem]
 
 
-@dataclass(slots=True)
-class _WorkflowVersion:
-    version: int
-    created_at: datetime
-    graph: GraphDefinition
-
-
-@dataclass(slots=True)
-class _WorkflowRecord:
-    workflow_id: str
-    created_at: datetime
-    updated_at: datetime
-    versions: list[_WorkflowVersion]
-
-
-_WORKFLOWS: dict[str, _WorkflowRecord] = {}
-_WORKFLOWS_LOCK = threading.Lock()
-
-
 @router.post("/api/workflow", response_model=WorkflowCreatedResponse)
 async def create_workflow(request: WorkflowCreateRequest) -> WorkflowCreatedResponse:
-    workflow_id = str(uuid4())
-    now = _now_utc()
-
-    record = _WorkflowRecord(
-        workflow_id=workflow_id,
-        created_at=now,
-        updated_at=now,
-        versions=[_WorkflowVersion(version=1, created_at=now, graph=request.graph)],
-    )
-
-    with _WORKFLOWS_LOCK:
-        _WORKFLOWS[workflow_id] = record
-
+    workflow_id = WORKFLOW_STORE.create(request.graph)
     return WorkflowCreatedResponse(workflow_id=workflow_id)
 
 
 @router.get("/api/workflow", response_model=WorkflowListResponse)
 async def list_workflows() -> WorkflowListResponse:
-    with _WORKFLOWS_LOCK:
-        records = list(_WORKFLOWS.values())
-
-    # Most-recently-updated first.
-    records.sort(key=lambda r: r.updated_at, reverse=True)
-
+    records = WORKFLOW_STORE.list()
     workflows = [
         WorkflowListItem(
             workflow_id=r.workflow_id,
@@ -131,38 +89,25 @@ async def list_workflows() -> WorkflowListResponse:
 
 @router.post("/api/workflow/{workflow_id}/version", response_model=WorkflowVersionCreatedResponse)
 async def create_workflow_version(workflow_id: str, request: WorkflowCreateRequest) -> WorkflowVersionCreatedResponse:
-    now = _now_utc()
-
-    with _WORKFLOWS_LOCK:
-        record = _WORKFLOWS.get(workflow_id)
-        if record is None:
-            raise HTTPException(status_code=404, detail="workflow_id not found")
-
-        next_version = (record.versions[-1].version + 1) if record.versions else 1
-        record.versions.append(_WorkflowVersion(version=next_version, created_at=now, graph=request.graph))
-        record.updated_at = now
+    try:
+        next_version = WORKFLOW_STORE.create_version(workflow_id, request.graph)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="workflow_id not found") from exc
 
     return WorkflowVersionCreatedResponse(workflow_id=workflow_id, version=next_version)
 
 
 @router.get("/api/workflow/{workflow_id}", response_model=WorkflowResponse)
 async def get_workflow(workflow_id: str, version: int | None = None) -> WorkflowResponse:
-    with _WORKFLOWS_LOCK:
-        record = _WORKFLOWS.get(workflow_id)
-
-    if record is None:
-        raise HTTPException(status_code=404, detail="workflow_id not found")
-
-    if not record.versions:
-        raise HTTPException(status_code=500, detail="workflow has no versions")
-
-    selected: _WorkflowVersion | None
-    if version is None:
-        selected = record.versions[-1]
-    else:
-        selected = next((v for v in record.versions if v.version == version), None)
-        if selected is None:
-            raise HTTPException(status_code=404, detail="workflow version not found")
+    try:
+        record, selected = WORKFLOW_STORE.get(workflow_id, version=version)
+    except KeyError as exc:
+        # Differentiate unknown workflow id vs unknown version.
+        if exc.args and isinstance(exc.args[0], str) and ":" in exc.args[0]:
+            raise HTTPException(status_code=404, detail="workflow version not found") from exc
+        raise HTTPException(status_code=404, detail="workflow_id not found") from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
 
     return WorkflowResponse(
         workflow_id=record.workflow_id,
@@ -175,12 +120,10 @@ async def get_workflow(workflow_id: str, version: int | None = None) -> Workflow
 
 @router.get("/api/workflow/{workflow_id}/versions", response_model=WorkflowVersionsResponse)
 async def list_workflow_versions(workflow_id: str) -> WorkflowVersionsResponse:
-    with _WORKFLOWS_LOCK:
-        record = _WORKFLOWS.get(workflow_id)
+    try:
+        latest_version, versions_raw = WORKFLOW_STORE.list_versions(workflow_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="workflow_id not found") from exc
 
-    if record is None:
-        raise HTTPException(status_code=404, detail="workflow_id not found")
-
-    versions = [WorkflowVersionInfo(version=v.version, created_at=v.created_at) for v in record.versions]
-    latest_version = record.versions[-1].version if record.versions else 0
+    versions = [WorkflowVersionInfo(version=v.version, created_at=v.created_at) for v in versions_raw]
     return WorkflowVersionsResponse(workflow_id=workflow_id, latest_version=latest_version, versions=versions)

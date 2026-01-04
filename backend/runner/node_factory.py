@@ -12,6 +12,7 @@ from typing import Any
 
 from backend.nodes.base import BaseNode
 from backend.nodes.control.end import EndNode
+from backend.nodes.control.agent import AgentNode
 from backend.nodes.control.router import RouterNode
 from backend.nodes.control.start import StartNode
 from backend.nodes.http.request import HTTPRequestNode
@@ -20,6 +21,7 @@ from backend.nodes.llm.fake_client import FakeLLMClient
 from backend.nodes.browser.node import BrowserNode
 from backend.nodes.browser.session import BrowserSession, BrowserSessionManager
 from backend.nodes.browser.httpx_page import HttpxPage
+from backend.workflows.store import WORKFLOW_STORE
 
 
 def build_nodes_for_graph(*, run_id: str, graph_nodes: list[Any]) -> dict[str, BaseNode]:
@@ -69,6 +71,8 @@ def build_nodes_for_graph(*, run_id: str, graph_nodes: list[Any]) -> dict[str, B
                 session_factory=session_factory,
                 config=config,
             )
+        elif node_type == "agent":
+            created = AgentNode(node_id, run_id=run_id, store=WORKFLOW_STORE, config=config)
         else:
             raise ValueError(f"Unsupported node type for node factory: {node_type}")
 

@@ -308,3 +308,11 @@ All notable changes to this project will be documented in this file.
 - Extended frontend workflow API client with `listWorkflows()`
 - Rendered a display-only “Saved Agents” section in the palette populated from backend
 - Added backend and frontend unit tests for listing + palette category building
+
+### F00006_S005: Nested Execution (Agent-within-Agent)
+
+- Added shared workflow store module for reuse by API routes and runtime node execution
+- Added `agent` node type that loads a saved workflow and executes it as a subgraph
+- Nested execution uses parent state as initial state and merges subgraph final state back into the parent
+- Included a nested trace boundary under reserved `__agent__` output payload
+- Added backend end-to-end test for nested execution via `POST /api/run`

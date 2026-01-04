@@ -14,7 +14,7 @@ This enables composition: complex agents are built from smaller agents.
 - [x] S002: “Save as Node” action (frontend)
 - [x] S003: Version history for saved agent nodes
 - [x] S004: Palette integration for saved agents
-- [ ] S005: Nested execution (agent-within-agent)
+- [x] S005: Nested execution (agent-within-agent)
 - [ ] S006: Infer input/output schema from saved graphs
 
 ## Acceptance Criteria
