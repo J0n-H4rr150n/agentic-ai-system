@@ -212,6 +212,13 @@ All notable changes to this project will be documented in this file.
 - Added minimal per-workflow run history list UI (backed by last-saved workflow id)
 - Added backend and frontend tests for workflow-scoped run history
 
+### F00007_S003: Run Detail View (Steps, Inputs/Outputs, Screenshots)
+
+- Added `getRun(runId)` API client to fetch persisted run detail from run history
+- Made the run history list clickable and wired selection into the existing trace viewer
+- Added a DOM-free loader that optionally loads the run's workflow graph to enrich node titles/types
+- Added frontend unit tests for loader behavior
+
 ### F00004_S001: API Client Module (Frontend)
 
 - Added `frontend/public/js/api/client.js` fetch wrapper with JSON handling and typed errors

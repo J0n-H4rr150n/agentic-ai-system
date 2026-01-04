@@ -22,14 +22,27 @@ function formatRunItemMeta(run) {
 }
 
 /**
- * @param {{ rootEl: HTMLElement, runHistoryApi: { listRuns: Function }, storage?: Storage }} params
+ * @param {{
+ *  rootEl: HTMLElement,
+ *  runHistoryApi: { listRuns: Function },
+ *  onRunSelected?: (runId: string) => void,
+ *  storage?: Storage,
+ * }} params
  */
-export function createRunHistoryViewer({ rootEl, runHistoryApi, storage = typeof localStorage === "undefined" ? null : localStorage }) {
+export function createRunHistoryViewer({
+  rootEl,
+  runHistoryApi,
+  onRunSelected,
+  storage = typeof localStorage === "undefined" ? null : localStorage,
+}) {
   if (!rootEl) {
     throw new Error("createRunHistoryViewer: rootEl is required");
   }
   if (!runHistoryApi || typeof runHistoryApi.listRuns !== "function") {
     throw new Error("createRunHistoryViewer: runHistoryApi.listRuns is required");
+  }
+  if (onRunSelected !== undefined && typeof onRunSelected !== "function") {
+    throw new Error("createRunHistoryViewer: onRunSelected must be a function if provided");
   }
 
   const title = el("h2", "run-history-title");
@@ -59,6 +72,12 @@ export function createRunHistoryViewer({ rootEl, runHistoryApi, storage = typeof
 
     for (const run of items) {
       const item = el("div", "run-history-item");
+      const runId = run?.run_id ? String(run.run_id) : "";
+      if (runId) {
+        item.addEventListener("click", () => {
+          onRunSelected?.(runId);
+        });
+      }
       const itemTitle = el("div", "run-history-item-title");
       itemTitle.textContent = formatRunItemTitle(run);
 

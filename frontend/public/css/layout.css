@@ -139,6 +139,11 @@
   border-radius: 8px;
   padding: 8px 10px;
   background: #ffffff;
+  cursor: pointer;
+}
+
+.run-history-item:hover {
+  border-color: #cbd5e1;
 }
 
 .run-history-item-title {

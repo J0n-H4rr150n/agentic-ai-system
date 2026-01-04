@@ -31,7 +31,19 @@ export function createRunHistoryApi(options = {}) {
     });
   }
 
+  async function getRun(runId, { signal } = {}) {
+    if (typeof runId !== "string" || !runId) {
+      throw new Error("runId must be a non-empty string");
+    }
+
+    return client.requestJson(`/runs/${encodeURIComponent(runId)}`, {
+      method: "GET",
+      signal,
+    });
+  }
+
   return {
     listRuns,
+    getRun,
   };
 }

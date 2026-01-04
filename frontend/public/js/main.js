@@ -13,6 +13,7 @@ import { createWorkflowStatusIndicator, WORKFLOW_SAVE_STATUSES } from "./ui/work
 import { createExecutionTraceViewer } from "./ui/trace/index.js";
 import { createRunHistoryApi } from "./api/run-history.js";
 import { createRunHistoryViewer } from "./ui/run-history.js";
+import { loadPersistedRun } from "./ui/run-history-loader.js";
 
 function requireElementById(id) {
   const element = document.getElementById(id);
@@ -61,7 +62,25 @@ function init() {
   const runApi = createRunApi();
   const workflowApi = createWorkflowApi();
   const runHistoryApi = createRunHistoryApi();
-  const runHistoryViewer = createRunHistoryViewer({ rootEl: runHistoryRoot, runHistoryApi });
+  const runHistoryViewer = createRunHistoryViewer({
+    rootEl: runHistoryRoot,
+    runHistoryApi,
+    onRunSelected: async (runId) => {
+      try {
+        const loaded = await loadPersistedRun({ runId, runHistoryApi, workflowApi });
+
+        traceViewer.clear();
+        traceViewer.setGraph(loaded.graph);
+        for (const step of loaded.trace) {
+          traceViewer.appendStep(step);
+        }
+
+        statusIndicator.setStatus(loaded.status, { runId: loaded.runId, error: loaded.error });
+      } catch {
+        // Ignore selection errors in MVP.
+      }
+    },
+  });
 
   // Load saved agents for display in the palette.
   workflowApi
