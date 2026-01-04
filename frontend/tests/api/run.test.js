@@ -65,3 +65,8 @@ test("createRunApi.openRunStream uses /api baseUrl", () => {
   const es = api.openRunStream("r1", { EventSourceImpl: FakeEventSource });
   assert.equal(es.url, "/api/run/r1/stream");
 });
+
+test("createRunApi.getRunStreamUrl builds stream url", () => {
+  const api = createRunApi({ baseUrl: "/api" });
+  assert.equal(api.getRunStreamUrl("r1"), "/api/run/r1/stream");
+});

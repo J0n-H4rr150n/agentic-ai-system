@@ -210,3 +210,9 @@ All notable changes to this project will be documented in this file.
 - Added a minimal toolbar above the canvas with a Run button and status indicator
 - Implemented run control logic: serialize graph, start run, then poll run status until terminal state
 - Added unit tests for run-control and status formatting logic
+
+### F00004_S003: SSE Integration for Real-time Updates
+
+- Added SSE stream helper with JSON parsing and reconnect logic
+- Updated run controls to prefer SSE terminal status events (polling fallback)
+- Added unit tests for SSE reconnect behavior and run-control SSE integration

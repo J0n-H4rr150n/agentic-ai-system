@@ -29,24 +29,28 @@ export function createRunApi(options = {}) {
     });
   }
 
-  function openRunStream(runId, { EventSourceImpl = EventSource } = {}) {
+  function getRunStreamUrl(runId) {
     if (typeof runId !== "string" || !runId) {
       throw new Error("runId must be a non-empty string");
-    }
-    if (typeof EventSourceImpl !== "function") {
-      throw new Error("EventSourceImpl must be a constructor");
     }
 
     const baseUrl = options.baseUrl ?? "/api";
     const base = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
-    const url = `${base}/run/${encodeURIComponent(runId)}/stream`;
+    return `${base}/run/${encodeURIComponent(runId)}/stream`;
+  }
 
-    return new EventSourceImpl(url);
+  function openRunStream(runId, { EventSourceImpl = EventSource } = {}) {
+    if (typeof EventSourceImpl !== "function") {
+      throw new Error("EventSourceImpl must be a constructor");
+    }
+
+    return new EventSourceImpl(getRunStreamUrl(runId));
   }
 
   return {
     startRun,
     getRun,
+    getRunStreamUrl,
     openRunStream,
   };
 }
