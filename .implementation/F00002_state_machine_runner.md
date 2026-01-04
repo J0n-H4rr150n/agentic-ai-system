@@ -19,7 +19,7 @@ Build the Python FastAPI backend that accepts a graph JSON payload and executes 
 - [x] S006: State Container Class
 - [x] S007: Async Executor with Parallel Support
 - [x] S008: Step Tracer (Input/Output/Duration)
-- [ ] S009: Run API Endpoints
+- [x] S009: Run API Endpoints
 - [ ] S010: SSE Streaming for Real-time Updates
 
 ## Acceptance Criteria

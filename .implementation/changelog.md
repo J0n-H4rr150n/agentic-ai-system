@@ -122,3 +122,9 @@ All notable changes to this project will be documented in this file.
 - Added step trace models and a `StepTracer` collector
 - Wired tracing into `AsyncExecutor` (input/output/duration/status)
 - Extended executor tests to verify deterministic trace ordering
+
+### F00002_S009: Run API Endpoints
+
+- Added `POST /api/run` and `GET /api/run/{id}` endpoints backed by an in-memory run store
+- Runs execute in the background via asyncio tasks and return step traces on GET
+- Added unit tests for run endpoint behavior
