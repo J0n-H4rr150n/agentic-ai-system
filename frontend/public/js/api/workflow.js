@@ -30,8 +30,16 @@ export function createWorkflowApi(options = {}) {
     });
   }
 
+
+  async function listWorkflows({ signal } = {}) {
+    return client.requestJson("/workflow", {
+      method: "GET",
+      signal,
+    });
+  }
   return {
     createWorkflow,
     getWorkflow,
+    listWorkflows,
   };
 }

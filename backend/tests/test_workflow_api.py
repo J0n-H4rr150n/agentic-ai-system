@@ -51,6 +51,25 @@ def test_create_and_get_workflow_roundtrip() -> None:
     assert [n["id"] for n in data["graph"]["nodes"]] == ["a", "b"]
 
 
+def test_list_workflows_includes_created_workflow() -> None:
+    client = TestClient(create_app())
+
+    created = client.post("/api/workflow", json={"graph": _simple_graph()})
+    assert created.status_code == 200
+    workflow_id = created.json()["workflow_id"]
+
+    listed = client.get("/api/workflow")
+    assert listed.status_code == 200
+    data = listed.json()
+    assert "workflows" in data
+
+    match = next((w for w in data["workflows"] if w["workflow_id"] == workflow_id), None)
+    assert match is not None
+    assert match["latest_version"] >= 1
+    assert "created_at" in match
+    assert "updated_at" in match
+
+
 def test_workflow_versioning_create_list_and_get() -> None:
     client = TestClient(create_app())
 

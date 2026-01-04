@@ -2,6 +2,7 @@ import { CanvasManager } from "./canvas/index.js";
 import { PaletteManager } from "./palette/index.js";
 import { PALETTE_CATEGORIES } from "./palette/categories.js";
 import { PaletteDragDropHandler } from "./palette/drag.js";
+import { buildPaletteCategoriesWithSavedAgents } from "./palette/saved-agents.js";
 import { serializeGraph, stringifyGraph } from "./graph/serializer.js";
 import { createRunApi } from "./api/run.js";
 import { createWorkflowApi } from "./api/workflow.js";
@@ -56,6 +57,21 @@ function init() {
   const traceViewer = createExecutionTraceViewer({ rootEl: traceRoot });
   const runApi = createRunApi();
   const workflowApi = createWorkflowApi();
+
+  // Load saved agents for display in the palette.
+  workflowApi
+    .listWorkflows()
+    .then((result) => {
+      const workflows = result?.workflows ?? [];
+      palette.categories = buildPaletteCategoriesWithSavedAgents({
+        categories: PALETTE_CATEGORIES,
+        workflows,
+      });
+      palette.render();
+    })
+    .catch(() => {
+      // Ignore listing errors in MVP; keep built-in palette.
+    });
   const controller = createRunController({
     runApi,
     getGraph: () =>

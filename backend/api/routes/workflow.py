@@ -60,6 +60,17 @@ class WorkflowVersionsResponse(BaseModel):
     versions: list[WorkflowVersionInfo]
 
 
+class WorkflowListItem(BaseModel):
+    workflow_id: str
+    latest_version: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class WorkflowListResponse(BaseModel):
+    workflows: list[WorkflowListItem]
+
+
 @dataclass(slots=True)
 class _WorkflowVersion:
     version: int
@@ -95,6 +106,27 @@ async def create_workflow(request: WorkflowCreateRequest) -> WorkflowCreatedResp
         _WORKFLOWS[workflow_id] = record
 
     return WorkflowCreatedResponse(workflow_id=workflow_id)
+
+
+@router.get("/api/workflow", response_model=WorkflowListResponse)
+async def list_workflows() -> WorkflowListResponse:
+    with _WORKFLOWS_LOCK:
+        records = list(_WORKFLOWS.values())
+
+    # Most-recently-updated first.
+    records.sort(key=lambda r: r.updated_at, reverse=True)
+
+    workflows = [
+        WorkflowListItem(
+            workflow_id=r.workflow_id,
+            latest_version=r.versions[-1].version if r.versions else 0,
+            created_at=r.created_at,
+            updated_at=r.updated_at,
+        )
+        for r in records
+    ]
+
+    return WorkflowListResponse(workflows=workflows)
 
 
 @router.post("/api/workflow/{workflow_id}/version", response_model=WorkflowVersionCreatedResponse)

@@ -19,7 +19,9 @@ function createItemButton(item) {
   button.textContent = item.title;
 
   // Data attributes used by S007 drag-drop.
-  button.dataset.nodeType = item.type;
+  if (typeof item.type === "string" && item.type) {
+    button.dataset.nodeType = item.type;
+  }
 
   return button;
 }

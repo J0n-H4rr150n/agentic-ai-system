@@ -42,3 +42,14 @@ test("createWorkflowApi.getWorkflow validates workflowId", async () => {
   const api = createWorkflowApi({ client: createFakeClient() });
   await assert.rejects(() => api.getWorkflow(""), /workflowId must be a non-empty string/);
 });
+
+test("createWorkflowApi.listWorkflows GETs /workflow", async () => {
+  const fake = createFakeClient();
+  const api = createWorkflowApi({ client: fake });
+
+  await api.listWorkflows();
+
+  assert.equal(fake.calls.length, 1);
+  assert.equal(fake.calls[0].path, "/workflow");
+  assert.equal(fake.calls[0].options.method, "GET");
+});

@@ -301,3 +301,10 @@ All notable changes to this project will be documented in this file.
   - `GET /api/workflow/{workflow_id}/versions` lists version history
 - Updated `GET /api/workflow/{workflow_id}` to support `?version=` (defaults to latest)
 - Added backend tests covering version create/list/get behaviors
+
+### F00006_S004: Palette Integration for Saved Agents
+
+- Added `GET /api/workflow` endpoint to list saved workflows (for UI discovery)
+- Extended frontend workflow API client with `listWorkflows()`
+- Rendered a display-only “Saved Agents” section in the palette populated from backend
+- Added backend and frontend unit tests for listing + palette category building
