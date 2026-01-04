@@ -14,9 +14,9 @@ Build the Python FastAPI backend that accepts a graph JSON payload and executes 
 - [x] S001: FastAPI Project Setup & Docker
 - [x] S002: Pydantic Models for Graph Schema
 - [x] S003: Graph Parser (JSON → Execution Plan)
-- [ ] S004: Dependency Resolver (Topological Sort)
-- [ ] S005: Base Node Executor Interface
-- [ ] S006: State Container Class
+- [x] S004: Dependency Resolver (Topological Sort)
+- [x] S005: Base Node Executor Interface
+- [x] S006: State Container Class
 - [ ] S007: Async Executor with Parallel Support
 - [ ] S008: Step Tracer (Input/Output/Duration)
 - [ ] S009: Run API Endpoints

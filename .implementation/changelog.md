@@ -105,3 +105,8 @@ All notable changes to this project will be documented in this file.
 - Added Pydantic v2 graph schema models (`GraphDefinition`, nodes, edges, ports)
 - Added basic referential integrity validation (edges reference existing nodes/ports)
 - Added backend unit tests for valid/invalid graphs
+
+### F00002_S006: State Container Class
+
+- Added `StateContainer` abstraction for runner state with key validation and snapshot/to-dict helpers
+- Added unit tests covering core state behaviors

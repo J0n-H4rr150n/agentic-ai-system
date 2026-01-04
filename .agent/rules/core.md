@@ -3,7 +3,7 @@ description: 'Primary Coding Agent: Enforces CORE rules for all AI agents workin
 ---
 # CORE Rules for AI Agents
 
-> **This document governs all AI agent behavior on this project.**  
+> **This document governs all AI agent behavior on this project.**
 > Every AI must read and follow these rules before making any changes.
 
 ---
@@ -49,6 +49,18 @@ This is a **Visual Agent IDE** for building stateful AI agents with drag-and-dro
 2. **Update Feature doc** — Check off the completed story
 3. **Add entry to `changelog.md`** with date and summary
 4. **If Feature is complete**, update Feature status to 🟢 Complete
+
+---
+
+## Dependency Management Conventions
+
+This repo intentionally uses **two** Python dependency workflows:
+
+- **Local development/testing:** use **Poetry** from the `backend/` folder.
+    - Example: `cd backend` then `poetry install` and `poetry run pytest -q`
+- **Docker images:** install Python dependencies via **pip** using `backend/requirements.txt`.
+
+If you add/remove backend dependencies, keep `backend/pyproject.toml` and `backend/requirements.txt` in sync.
 
 ---
 
@@ -148,7 +160,7 @@ from pydantic import BaseModel, validator
 class NodeConfig(BaseModel):
     node_type: str
     url: str
-    
+
     @validator('url')
     def validate_url(cls, v):
         if not v.startswith(('http://', 'https://')):
@@ -296,12 +308,12 @@ class NodeExecutionError(Exception):
 def execute_graph(graph_json: dict) -> RunResult:
     # Validate immediately
     graph = GraphDefinition.parse_obj(graph_json)  # Fails fast if invalid
-    
+
     # Check dependencies before starting
     missing = find_missing_nodes(graph)
     if missing:
         raise GraphValidationError(f"Unknown node types: {missing}")
-    
+
     # Now safe to execute
     return run_graph(graph)
 ```
@@ -327,17 +339,17 @@ element_index = raw_index + 1
 def calculate_bezier_point(t: float, p0: Point, p1: Point, p2: Point, p3: Point) -> Point:
     """
     Calculate a point on a cubic bezier curve.
-    
+
     Args:
         t: Parameter from 0.0 (start) to 1.0 (end)
         p0: Start point
         p1: First control point
         p2: Second control point
         p3: End point
-    
+
     Returns:
         The point on the curve at parameter t
-    
+
     Example:
         >>> midpoint = calculate_bezier_point(0.5, start, ctrl1, ctrl2, end)
     """
