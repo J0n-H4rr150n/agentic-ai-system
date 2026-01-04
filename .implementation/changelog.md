@@ -285,3 +285,10 @@ All notable changes to this project will be documented in this file.
   - `GET /api/workflow/{workflow_id}` returns the stored graph
 - Wired workflow router into the FastAPI app
 - Added backend tests for workflow create/get behavior
+
+### F00006_S002: “Save as Node” Action (Frontend)
+
+- Added workflow API client module (`createWorkflowApi`) for create/get workflow
+- Added a minimal toolbar action “Save as Node” that POSTs the serialized graph to `POST /api/workflow`
+- Added workflow status display in the toolbar showing returned `workflow_id`
+- Added frontend unit tests covering the workflow API client and save-as-node controller

@@ -4,8 +4,11 @@ import { PALETTE_CATEGORIES } from "./palette/categories.js";
 import { PaletteDragDropHandler } from "./palette/drag.js";
 import { serializeGraph, stringifyGraph } from "./graph/serializer.js";
 import { createRunApi } from "./api/run.js";
+import { createWorkflowApi } from "./api/workflow.js";
 import { createRunController } from "./ui/run-controls.js";
 import { createRunStatusIndicator, RUN_STATUSES } from "./ui/status.js";
+import { createSaveAsNodeController } from "./ui/save-as-node.js";
+import { createWorkflowStatusIndicator, WORKFLOW_SAVE_STATUSES } from "./ui/workflow-status.js";
 import { createExecutionTraceViewer } from "./ui/trace/index.js";
 
 function requireElementById(id) {
@@ -22,6 +25,8 @@ function init() {
 
   const runButton = requireElementById("runButton");
   const runStatus = requireElementById("runStatus");
+  const saveAsNodeButton = requireElementById("saveAsNodeButton");
+  const workflowStatus = requireElementById("workflowStatus");
   const traceRoot = requireElementById("traceRoot");
 
   const canvas = requireElementById("agentCanvas");
@@ -47,8 +52,10 @@ function init() {
   });
 
   const statusIndicator = createRunStatusIndicator({ element: runStatus });
+  const workflowStatusIndicator = createWorkflowStatusIndicator({ element: workflowStatus });
   const traceViewer = createExecutionTraceViewer({ rootEl: traceRoot });
   const runApi = createRunApi();
+  const workflowApi = createWorkflowApi();
   const controller = createRunController({
     runApi,
     getGraph: () =>
@@ -71,6 +78,23 @@ function init() {
 
   runButton.addEventListener("click", async () => {
     await controller.runOnce();
+  });
+
+  const saveAsNodeController = createSaveAsNodeController({
+    workflowApi,
+    getGraph: () =>
+      serializeGraph({
+        nodeManager: manager.nodeManager,
+        wireManager: manager.wireManager,
+      }),
+    onStatus: (status, details) => {
+      workflowStatusIndicator.setStatus(status, details);
+      saveAsNodeButton.disabled = status === WORKFLOW_SAVE_STATUSES.SAVING;
+    },
+  });
+
+  saveAsNodeButton.addEventListener("click", async () => {
+    await saveAsNodeController.save();
   });
 
   const dragDrop = new PaletteDragDropHandler({
