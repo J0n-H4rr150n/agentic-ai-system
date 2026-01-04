@@ -219,6 +219,13 @@ All notable changes to this project will be documented in this file.
 - Added a DOM-free loader that optionally loads the run's workflow graph to enrich node titles/types
 - Added frontend unit tests for loader behavior
 
+### F00007_S004: Replay from Checkpoint (Time-travel)
+
+- Persisted optional checkpoint data into run history records ("where available")
+- Added `POST /api/runs/{run_id}/replay` to start a new run from a persisted checkpoint
+- Added minimal Run History UI replay affordance and frontend API client support
+- Added backend integration test and frontend unit test coverage
+
 ### F00004_S001: API Client Module (Frontend)
 
 - Added `frontend/public/js/api/client.js` fetch wrapper with JSON handling and typed errors

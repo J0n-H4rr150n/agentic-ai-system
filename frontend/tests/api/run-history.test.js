@@ -20,6 +20,7 @@ function makeFetch() {
               completed_at: "2026-01-04T00:00:01Z",
               trace: [{ node_id: "a", status: "completed" }],
               error: null,
+              checkpoint: null,
             });
           },
         };
@@ -53,9 +54,21 @@ function makeFetch() {
                 started_at: "2026-01-04T00:00:00Z",
                 completed_at: "2026-01-04T00:00:01Z",
                 error: null,
+                has_checkpoint: true,
               },
             ],
           });
+        },
+      };
+    }
+
+    if (url === "/api/runs/r1/replay" && options?.method === "POST") {
+      return {
+        ok: true,
+        status: 200,
+        headers: new Headers({ "content-type": "application/json" }),
+        async text() {
+          return JSON.stringify({ run_id: "r2", status: "running" });
         },
       };
     }
@@ -93,4 +106,12 @@ test("createRunHistoryApi.getRun GETs /runs/{id}", async () => {
   assert.equal(result.run_id, "r1");
   assert.equal(result.workflow_id, "w1");
   assert.ok(Array.isArray(result.trace));
+});
+
+test("createRunHistoryApi.replayRun POSTs /runs/{id}/replay", async () => {
+  const api = createRunHistoryApi({ baseUrl: "/api", fetchImpl: makeFetch() });
+  const result = await api.replayRun("r1");
+
+  assert.equal(result.run_id, "r2");
+  assert.equal(result.status, "running");
 });

@@ -28,6 +28,7 @@ from backend.runner.node_factory import build_nodes_for_graph
 from backend.runner.state import StateContainer
 from backend.runner.tracer import StepTracer
 from backend.runs.store import RUN_HISTORY_STORE
+from backend.workflows.store import WORKFLOW_STORE
 
 
 RunMode = Literal["run", "simulate", "test"]
@@ -146,22 +147,22 @@ async def _execute_run(run_id: str, request: RunRequest) -> None:
                 completed_at=rec.completed_at,
                 trace=rec.trace,
                 error=rec.error,
-            )
-
-            RUN_HISTORY_STORE.persist_terminal(
-                run_id=rec.run_id,
-                workflow_id=rec.request.workflow_id,
-                status="completed",
-                started_at=rec.started_at,
-                completed_at=rec.completed_at,
-                trace=rec.trace,
-                error=rec.error,
+                checkpoint=None,
             )
 
         record.events.put(_format_sse(event="status", data={"run_id": run_id, "status": "completed"}))
         record.events.put(None)
 
-    except RunCancelled:
+    except RunCancelled as cancelled:
+        checkpoint = RunCheckpoint(
+            run_id=run_id,
+            created_at=_now_utc(),
+            state=cancelled.checkpoint.state,
+            completed_node_ids=list(cancelled.checkpoint.completed_node_ids),
+            ready_node_ids=list(cancelled.checkpoint.ready_node_ids),
+            indegree=dict(cancelled.checkpoint.indegree),
+            handled_interrupts=list(cancelled.checkpoint.handled_interrupts),
+        )
         with _RUNS_LOCK:
             rec = _RUNS[run_id]
             rec.status = "cancelled"
@@ -183,16 +184,7 @@ async def _execute_run(run_id: str, request: RunRequest) -> None:
                 completed_at=rec.completed_at,
                 trace=rec.trace,
                 error=rec.error,
-            )
-
-            RUN_HISTORY_STORE.persist_terminal(
-                run_id=rec.run_id,
-                workflow_id=rec.request.workflow_id,
-                status="cancelled",
-                started_at=rec.started_at,
-                completed_at=rec.completed_at,
-                trace=rec.trace,
-                error=rec.error,
+                checkpoint=checkpoint,
             )
 
         record.events.put(_format_sse(event="status", data={"run_id": run_id, "status": "cancelled"}))
@@ -285,16 +277,7 @@ async def _execute_run(run_id: str, request: RunRequest) -> None:
                 completed_at=rec.completed_at,
                 trace=rec.trace,
                 error=rec.error,
-            )
-
-            RUN_HISTORY_STORE.persist_terminal(
-                run_id=rec.run_id,
-                workflow_id=rec.request.workflow_id,
-                status="failed",
-                started_at=rec.started_at,
-                completed_at=rec.completed_at,
-                trace=rec.trace,
-                error=rec.error,
+                checkpoint=None,
             )
 
         record.events.put(
@@ -552,6 +535,7 @@ def _request_cancel_locked(record: _RunRecord) -> _RunRecord:
         record.cancel_requested = True
         record.pause_requested = False
     elif record.status == "paused":
+        checkpoint = record.checkpoint
         record.status = "cancelled"
         record.pause_requested = False
         record.cancel_requested = False
@@ -570,6 +554,7 @@ def _request_cancel_locked(record: _RunRecord) -> _RunRecord:
             completed_at=record.completed_at,
             trace=record.trace,
             error=record.error,
+            checkpoint=checkpoint,
         )
 
         # Provide a fresh stream for SSE clients to observe the terminal status.
@@ -640,6 +625,249 @@ async def get_checkpoint(run_id: str) -> RunCheckpoint:
         raise HTTPException(status_code=404, detail="checkpoint not found")
 
     return record.checkpoint
+
+
+class RunReplayResponse(BaseModel):
+    run_id: str
+    status: RunStatus
+
+
+def _start_run_worker(*, run_id: str, request: RunRequest, checkpoint: ExecutionCheckpoint | None = None) -> None:
+    def _runner() -> None:
+        asyncio.run(_execute_run_with_checkpoint(run_id, request, checkpoint))
+
+    threading.Thread(target=_runner, name=f"run-{run_id}", daemon=True).start()
+
+
+async def _execute_run_with_checkpoint(
+    run_id: str,
+    request: RunRequest,
+    checkpoint: ExecutionCheckpoint | None,
+) -> None:
+    with _RUNS_LOCK:
+        record = _RUNS[run_id]
+
+    def _emit_step(step: StepTrace) -> None:
+        record.events.put(_format_sse(event="step", data=step.model_dump()))
+
+    tracer = StepTracer(on_record=_emit_step)
+
+    def _should_pause() -> bool:
+        with _RUNS_LOCK:
+            rec = _RUNS.get(run_id)
+            return bool(rec is not None and rec.pause_requested)
+
+    def _should_cancel() -> bool:
+        with _RUNS_LOCK:
+            rec = _RUNS.get(run_id)
+            return bool(rec is not None and rec.cancel_requested)
+
+    try:
+        plan = parse_graph(request.graph)
+        topological_sort(plan)
+
+        nodes = build_nodes_for_graph(run_id=run_id, graph_nodes=request.graph.nodes)
+        executor = AsyncExecutor()
+        await executor.run(
+            plan,
+            nodes,
+            checkpoint=checkpoint,
+            tracer=tracer,
+            should_pause=_should_pause,
+            should_cancel=_should_cancel,
+        )
+
+        with _RUNS_LOCK:
+            rec = _RUNS[run_id]
+            rec.status = "completed"
+            rec.paused_at = None
+            rec.completed_at = _now_utc()
+            rec.trace = tracer.steps()
+            rec.error = None
+            rec.pause_reason = None
+            rec.pending_interrupt = None
+            rec.checkpoint = None
+
+            RUN_HISTORY_STORE.persist_terminal(
+                run_id=rec.run_id,
+                workflow_id=rec.request.workflow_id,
+                status="completed",
+                started_at=rec.started_at,
+                completed_at=rec.completed_at,
+                trace=rec.trace,
+                error=rec.error,
+                checkpoint=None,
+            )
+
+        record.events.put(_format_sse(event="status", data={"run_id": run_id, "status": "completed"}))
+        record.events.put(None)
+
+    except RunCancelled as cancelled:
+        checkpoint_model = RunCheckpoint(
+            run_id=run_id,
+            created_at=_now_utc(),
+            state=cancelled.checkpoint.state,
+            completed_node_ids=list(cancelled.checkpoint.completed_node_ids),
+            ready_node_ids=list(cancelled.checkpoint.ready_node_ids),
+            indegree=dict(cancelled.checkpoint.indegree),
+            handled_interrupts=list(cancelled.checkpoint.handled_interrupts),
+        )
+
+        with _RUNS_LOCK:
+            rec = _RUNS[run_id]
+            rec.status = "cancelled"
+            rec.pause_requested = False
+            rec.cancel_requested = False
+            rec.paused_at = None
+            rec.completed_at = _now_utc()
+            rec.trace = tracer.steps()
+            rec.error = None
+            rec.checkpoint = None
+            rec.pause_reason = None
+            rec.pending_interrupt = None
+
+            RUN_HISTORY_STORE.persist_terminal(
+                run_id=rec.run_id,
+                workflow_id=rec.request.workflow_id,
+                status="cancelled",
+                started_at=rec.started_at,
+                completed_at=rec.completed_at,
+                trace=rec.trace,
+                error=rec.error,
+                checkpoint=checkpoint_model,
+            )
+
+        record.events.put(_format_sse(event="status", data={"run_id": run_id, "status": "cancelled"}))
+        record.events.put(None)
+
+    except RunInterrupted as interrupted:
+        checkpoint_model = RunCheckpoint(
+            run_id=run_id,
+            created_at=_now_utc(),
+            state=interrupted.checkpoint.state,
+            completed_node_ids=list(interrupted.checkpoint.completed_node_ids),
+            ready_node_ids=list(interrupted.checkpoint.ready_node_ids),
+            indegree=dict(interrupted.checkpoint.indegree),
+            handled_interrupts=list(interrupted.checkpoint.handled_interrupts),
+        )
+
+        pending = PendingInterrupt(
+            node_id=interrupted.interrupt.node_id,
+            phase=interrupted.interrupt.phase,
+            reason=interrupted.interrupt.reason,
+        )
+
+        with _RUNS_LOCK:
+            rec = _RUNS[run_id]
+            rec.status = "paused"
+            rec.paused_at = _now_utc()
+            rec.completed_at = None
+            rec.trace = tracer.steps()
+            rec.error = None
+            rec.checkpoint = checkpoint_model
+            rec.pause_reason = "interrupt"
+            rec.pending_interrupt = pending
+            rec.pause_requested = False
+
+        record.events.put(
+            _format_sse(
+                event="status",
+                data={
+                    "run_id": run_id,
+                    "status": "paused",
+                    "pause_reason": "interrupt",
+                    "pending_interrupt": pending.model_dump(),
+                },
+            )
+        )
+        record.events.put(None)
+
+    except RunPaused as paused:
+        checkpoint_model = RunCheckpoint(
+            run_id=run_id,
+            created_at=_now_utc(),
+            state=paused.checkpoint.state,
+            completed_node_ids=list(paused.checkpoint.completed_node_ids),
+            ready_node_ids=list(paused.checkpoint.ready_node_ids),
+            indegree=dict(paused.checkpoint.indegree),
+            handled_interrupts=list(paused.checkpoint.handled_interrupts),
+        )
+
+        with _RUNS_LOCK:
+            rec = _RUNS[run_id]
+            rec.status = "paused"
+            rec.paused_at = _now_utc()
+            rec.completed_at = None
+            rec.trace = tracer.steps()
+            rec.error = None
+            rec.checkpoint = checkpoint_model
+            rec.pause_reason = "manual"
+            rec.pending_interrupt = None
+
+        record.events.put(_format_sse(event="status", data={"run_id": run_id, "status": "paused"}))
+        record.events.put(None)
+
+    except Exception as exc:  # noqa: BLE001
+        with _RUNS_LOCK:
+            rec = _RUNS[run_id]
+            rec.status = "failed"
+            rec.paused_at = None
+            rec.completed_at = _now_utc()
+            rec.trace = tracer.steps()
+            rec.error = str(exc)
+            rec.pause_reason = None
+            rec.pending_interrupt = None
+            rec.checkpoint = None
+
+            RUN_HISTORY_STORE.persist_terminal(
+                run_id=rec.run_id,
+                workflow_id=rec.request.workflow_id,
+                status="failed",
+                started_at=rec.started_at,
+                completed_at=rec.completed_at,
+                trace=rec.trace,
+                error=rec.error,
+                checkpoint=None,
+            )
+
+        record.events.put(
+            _format_sse(event="status", data={"run_id": run_id, "status": "failed", "error": str(exc)})
+        )
+        record.events.put(None)
+
+
+@router.post("/api/runs/{run_id}/replay", response_model=RunReplayResponse)
+async def replay_run_from_history(run_id: str) -> RunReplayResponse:
+    record = RUN_HISTORY_STORE.get(run_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="run_id not found")
+    if record.workflow_id is None:
+        raise HTTPException(status_code=409, detail="run has no workflow_id")
+    if record.checkpoint is None:
+        raise HTTPException(status_code=409, detail="run has no persisted checkpoint")
+
+    try:
+        _, selected = WORKFLOW_STORE.get(record.workflow_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="workflow_id not found") from exc
+
+    checkpoint = ExecutionCheckpoint(
+        state=dict(record.checkpoint.state),
+        completed_node_ids=list(record.checkpoint.completed_node_ids),
+        ready_node_ids=list(record.checkpoint.ready_node_ids),
+        indegree=dict(record.checkpoint.indegree),
+        handled_interrupts=list(record.checkpoint.handled_interrupts),
+    )
+
+    new_run_id = str(uuid4())
+    request = RunRequest(graph=selected.graph, mode="run", workflow_id=record.workflow_id)
+    new_record = _RunRecord(run_id=new_run_id, status="running", started_at=_now_utc(), request=request)
+
+    with _RUNS_LOCK:
+        _RUNS[new_run_id] = new_record
+
+    _start_run_worker(run_id=new_run_id, request=request, checkpoint=checkpoint)
+    return RunReplayResponse(run_id=new_run_id, status="running")
 
 
 class HitlEditRequest(BaseModel):

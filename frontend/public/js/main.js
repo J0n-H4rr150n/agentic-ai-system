@@ -80,6 +80,52 @@ function init() {
         // Ignore selection errors in MVP.
       }
     },
+    onReplayRequested: async (runId) => {
+      try {
+        // Load graph metadata for display.
+        const detail = await runHistoryApi.getRun(runId);
+        const workflowId = detail?.workflow_id ?? null;
+        const wf = workflowId ? await workflowApi.getWorkflow(workflowId) : null;
+        const graph = wf?.graph ?? null;
+
+        // Start a new run from the persisted checkpoint.
+        const replayed = await runHistoryApi.replayRun(runId);
+        const newRunId = replayed?.run_id;
+        if (!newRunId) {
+          return;
+        }
+
+        traceViewer.clear();
+        traceViewer.setGraph(graph);
+        statusIndicator.setStatus(RUN_STATUSES.RUNNING, { runId: newRunId, error: null });
+        runButton.disabled = true;
+
+        // Poll for trace growth and terminal status.
+        let seen = 0;
+        while (true) {
+          const current = await runApi.getRun(newRunId);
+          const status = current?.status ?? RUN_STATUSES.RUNNING;
+          const error = current?.error ?? null;
+          const trace = Array.isArray(current?.trace) ? current.trace : [];
+
+          for (const step of trace.slice(seen)) {
+            traceViewer.appendStep(step);
+          }
+          seen = trace.length;
+
+          statusIndicator.setStatus(status, { runId: newRunId, error });
+          if (status !== RUN_STATUSES.RUNNING) {
+            runButton.disabled = false;
+            runHistoryViewer.refresh();
+            return;
+          }
+
+          await new Promise((r) => setTimeout(r, 250));
+        }
+      } catch {
+        // Ignore replay errors in MVP.
+      }
+    },
   });
 
   // Load saved agents for display in the palette.

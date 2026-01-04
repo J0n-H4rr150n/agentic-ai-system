@@ -10,7 +10,7 @@ from datetime import datetime
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
-from backend.models.run import StepTrace
+from backend.models.run import RunCheckpoint, StepTrace
 from backend.runs.store import RUN_HISTORY_STORE
 
 
@@ -24,6 +24,7 @@ class RunHistoryListItem(BaseModel):
     started_at: datetime
     completed_at: datetime
     error: str | None = None
+    has_checkpoint: bool = False
 
 
 class RunHistoryListResponse(BaseModel):
@@ -38,6 +39,7 @@ class RunHistoryDetailResponse(BaseModel):
     completed_at: datetime
     trace: list[StepTrace]
     error: str | None = None
+    checkpoint: RunCheckpoint | None = None
 
 
 @router.get("/api/runs", response_model=RunHistoryListResponse)
@@ -55,6 +57,7 @@ async def list_runs(
                 started_at=r.started_at,
                 completed_at=r.completed_at,
                 error=r.error,
+                has_checkpoint=r.checkpoint is not None,
             )
             for r in records
         ]
@@ -75,4 +78,5 @@ async def get_run_history(run_id: str) -> RunHistoryDetailResponse:
         completed_at=record.completed_at,
         trace=record.trace,
         error=record.error,
+        checkpoint=record.checkpoint,
     )

@@ -151,6 +151,27 @@
   color: #111827;
 }
 
+.run-history-item-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.run-history-action {
+  padding: 6px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #111827;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.run-history-action:hover {
+  border-color: #cbd5e1;
+}
+
 .run-history-item-meta {
   margin-top: 2px;
   font-size: 11px;

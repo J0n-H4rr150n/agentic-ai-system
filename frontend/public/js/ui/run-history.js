@@ -26,6 +26,7 @@ function formatRunItemMeta(run) {
  *  rootEl: HTMLElement,
  *  runHistoryApi: { listRuns: Function },
  *  onRunSelected?: (runId: string) => void,
+ *  onReplayRequested?: (runId: string) => void,
  *  storage?: Storage,
  * }} params
  */
@@ -33,6 +34,7 @@ export function createRunHistoryViewer({
   rootEl,
   runHistoryApi,
   onRunSelected,
+  onReplayRequested,
   storage = typeof localStorage === "undefined" ? null : localStorage,
 }) {
   if (!rootEl) {
@@ -43,6 +45,9 @@ export function createRunHistoryViewer({
   }
   if (onRunSelected !== undefined && typeof onRunSelected !== "function") {
     throw new Error("createRunHistoryViewer: onRunSelected must be a function if provided");
+  }
+  if (onReplayRequested !== undefined && typeof onReplayRequested !== "function") {
+    throw new Error("createRunHistoryViewer: onReplayRequested must be a function if provided");
   }
 
   const title = el("h2", "run-history-title");
@@ -78,8 +83,24 @@ export function createRunHistoryViewer({
           onRunSelected?.(runId);
         });
       }
+      const itemHeader = el("div", "run-history-item-header");
+
       const itemTitle = el("div", "run-history-item-title");
       itemTitle.textContent = formatRunItemTitle(run);
+
+      if (runId && run?.has_checkpoint && onReplayRequested) {
+        const replayButton = el("button", "run-history-action");
+        replayButton.type = "button";
+        replayButton.textContent = "Replay";
+        replayButton.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          onReplayRequested(runId);
+        });
+        itemHeader.append(itemTitle, replayButton);
+      } else {
+        itemHeader.append(itemTitle);
+      }
 
       const itemMeta = el("div", "run-history-item-meta");
       const metaParts = [];
@@ -88,7 +109,7 @@ export function createRunHistoryViewer({
       if (run?.error) metaParts.push(String(run.error));
       itemMeta.textContent = metaParts.join(" • ");
 
-      item.append(itemTitle, itemMeta);
+      item.append(itemHeader, itemMeta);
       list.append(item);
     }
   }

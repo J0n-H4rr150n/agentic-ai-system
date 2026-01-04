@@ -42,8 +42,20 @@ export function createRunHistoryApi(options = {}) {
     });
   }
 
+  async function replayRun(runId, { signal } = {}) {
+    if (typeof runId !== "string" || !runId) {
+      throw new Error("runId must be a non-empty string");
+    }
+
+    return client.requestJson(`/runs/${encodeURIComponent(runId)}/replay`, {
+      method: "POST",
+      signal,
+    });
+  }
+
   return {
     listRuns,
     getRun,
+    replayRun,
   };
 }
