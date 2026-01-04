@@ -116,3 +116,9 @@ All notable changes to this project will be documented in this file.
 - Added `AsyncExecutor` that runs dependency-ready nodes concurrently via asyncio
 - Ensured deterministic execution via stable ready ordering and deterministic state merge
 - Added unit tests for parallel readiness and dependency gating
+
+### F00002_S008: Step Tracer (Input/Output/Duration)
+
+- Added step trace models and a `StepTracer` collector
+- Wired tracing into `AsyncExecutor` (input/output/duration/status)
+- Extended executor tests to verify deterministic trace ordering
