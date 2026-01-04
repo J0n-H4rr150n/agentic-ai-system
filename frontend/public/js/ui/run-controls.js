@@ -16,7 +16,9 @@ function isTerminalStatus(status) {
  * @param {{
  *   runApi: { startRun: Function, getRun: Function, openRunStream?: Function },
  *   getGraph: Function,
+ *   onRunStart?: Function,
  *   onStatus: Function,
+ *   onStep?: Function,
  *   pollIntervalMs?: number,
  *   sleepImpl?: Function,
  *   useSse?: boolean,
@@ -27,7 +29,9 @@ function isTerminalStatus(status) {
 export function createRunController({
   runApi,
   getGraph,
+  onRunStart,
   onStatus,
+  onStep,
   pollIntervalMs = 400,
   sleepImpl = defaultSleep,
   useSse = true,
@@ -42,6 +46,12 @@ export function createRunController({
   }
   if (typeof onStatus !== "function") {
     throw new Error("onStatus must be a function");
+  }
+  if (onRunStart !== undefined && typeof onRunStart !== "function") {
+    throw new Error("onRunStart must be a function if provided");
+  }
+  if (onStep !== undefined && typeof onStep !== "function") {
+    throw new Error("onStep must be a function if provided");
   }
   if (typeof sleepImpl !== "function") {
     throw new Error("sleepImpl must be a function");
@@ -60,6 +70,7 @@ export function createRunController({
 
     try {
       const graph = getGraph();
+      onRunStart?.(graph);
       onStatus(RUN_STATUSES.RUNNING, { runId: null, error: null });
 
       const created = await runApi.startRun({ graph });
@@ -84,6 +95,9 @@ export function createRunController({
             url,
             EventSourceImpl,
             onEvent: (eventName, payload) => {
+              if (eventName === "step") {
+                onStep?.(payload);
+              }
               if (eventName === "status") {
                 const status = payload?.status;
                 const error = payload?.error ?? null;

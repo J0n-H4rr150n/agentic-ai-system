@@ -216,3 +216,10 @@ All notable changes to this project will be documented in this file.
 - Added SSE stream helper with JSON parsing and reconnect logic
 - Updated run controls to prefer SSE terminal status events (polling fallback)
 - Added unit tests for SSE reconnect behavior and run-control SSE integration
+
+### F00004_S004: Execution Trace Viewer (GitHub Actions style)
+
+- Added trace viewer panel that renders step traces in real time
+- Wired SSE `step` events to append collapsible step rows with input/output/error
+- Added screenshot preview support for base64 screenshot fields
+- Added unit tests for trace formatting and sanitization

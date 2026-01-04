@@ -6,6 +6,7 @@ import { serializeGraph, stringifyGraph } from "./graph/serializer.js";
 import { createRunApi } from "./api/run.js";
 import { createRunController } from "./ui/run-controls.js";
 import { createRunStatusIndicator, RUN_STATUSES } from "./ui/status.js";
+import { createExecutionTraceViewer } from "./ui/trace/index.js";
 
 function requireElementById(id) {
   const element = document.getElementById(id);
@@ -21,6 +22,7 @@ function init() {
 
   const runButton = requireElementById("runButton");
   const runStatus = requireElementById("runStatus");
+  const traceRoot = requireElementById("traceRoot");
 
   const canvas = requireElementById("agentCanvas");
   const host = requireElementById("canvasHost");
@@ -45,6 +47,7 @@ function init() {
   });
 
   const statusIndicator = createRunStatusIndicator({ element: runStatus });
+  const traceViewer = createExecutionTraceViewer({ rootEl: traceRoot });
   const runApi = createRunApi();
   const controller = createRunController({
     runApi,
@@ -53,6 +56,13 @@ function init() {
         nodeManager: manager.nodeManager,
         wireManager: manager.wireManager,
       }),
+    onRunStart: (graph) => {
+      traceViewer.clear();
+      traceViewer.setGraph(graph);
+    },
+    onStep: (step) => {
+      traceViewer.appendStep(step);
+    },
     onStatus: (status, details) => {
       statusIndicator.setStatus(status, details);
       runButton.disabled = status === RUN_STATUSES.RUNNING;

@@ -14,7 +14,7 @@ Wire everything together: frontend canvas talks to backend runner, add run contr
 - [x] S001: API Client Module (Frontend)
 - [x] S002: Run Controls UI (Run button, status indicator)
 - [x] S003: SSE Integration for Real-time Updates
-- [ ] S004: Execution Trace Viewer (GitHub Actions style)
+- [x] S004: Execution Trace Viewer (GitHub Actions style)
 - [ ] S005: Build Sample Security Workflow
 - [ ] S006: End-to-End Test Against Local Lab
 
@@ -27,11 +27,11 @@ Wire everything together: frontend canvas talks to backend runner, add run contr
 - [x] SSE stream updates UI in real-time as steps execute
 
 ### Execution Trace Viewer
-- [ ] Panel shows list of steps (collapsible)
-- [ ] Each step shows: node name, type, status icon, duration
-- [ ] Expand step to see: input, output, error (if any)
-- [ ] Screenshot preview for browser nodes
-- [ ] Auto-scroll to current step during execution
+- [x] Panel shows list of steps (collapsible)
+- [x] Each step shows: node name, type, status icon, duration
+- [x] Expand step to see: input, output, error (if any)
+- [x] Screenshot preview for browser nodes
+- [x] Auto-scroll to current step during execution
 
 ### Sample Workflow
 - [ ] Workflow includes: Start → Browser → LLM → Router → End
