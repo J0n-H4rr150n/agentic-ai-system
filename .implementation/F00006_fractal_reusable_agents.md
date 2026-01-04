@@ -1,6 +1,6 @@
 # F00006: Fractal Architecture (Reusable Agents)
 
-**Status:** 🟡 In Progress
+**Status:** 🟢 Complete
 **Phase:** 5
 **Priority:** P1 (High)
 
@@ -15,7 +15,7 @@ This enables composition: complex agents are built from smaller agents.
 - [x] S003: Version history for saved agent nodes
 - [x] S004: Palette integration for saved agents
 - [x] S005: Nested execution (agent-within-agent)
-- [ ] S006: Infer input/output schema from saved graphs
+- [x] S006: Infer input/output schema from saved graphs
 
 ## Acceptance Criteria
 - A workflow can be saved and loaded by id.

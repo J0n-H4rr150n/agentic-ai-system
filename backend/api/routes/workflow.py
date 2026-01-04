@@ -16,6 +16,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from backend.models.graph import GraphDefinition
+from backend.workflows.schema import infer_workflow_io_schema
 from backend.workflows.store import WORKFLOW_STORE
 
 
@@ -63,6 +64,14 @@ class WorkflowListItem(BaseModel):
 
 class WorkflowListResponse(BaseModel):
     workflows: list[WorkflowListItem]
+
+
+class WorkflowSchemaResponse(BaseModel):
+    workflow_id: str
+    version: int
+    inputs: list[str]
+    outputs: list[str]
+    warnings: list[str]
 
 
 @router.post("/api/workflow", response_model=WorkflowCreatedResponse)
@@ -127,3 +136,23 @@ async def list_workflow_versions(workflow_id: str) -> WorkflowVersionsResponse:
 
     versions = [WorkflowVersionInfo(version=v.version, created_at=v.created_at) for v in versions_raw]
     return WorkflowVersionsResponse(workflow_id=workflow_id, latest_version=latest_version, versions=versions)
+
+
+@router.get("/api/workflow/{workflow_id}/schema", response_model=WorkflowSchemaResponse)
+async def get_workflow_schema(workflow_id: str, version: int | None = None) -> WorkflowSchemaResponse:
+    try:
+        _, selected = WORKFLOW_STORE.get(workflow_id, version=version)
+    except KeyError as exc:
+        if exc.args and isinstance(exc.args[0], str) and ":" in exc.args[0]:
+            raise HTTPException(status_code=404, detail="workflow version not found") from exc
+        raise HTTPException(status_code=404, detail="workflow_id not found") from exc
+
+    inferred = infer_workflow_io_schema(selected.graph, store=WORKFLOW_STORE)
+
+    return WorkflowSchemaResponse(
+        workflow_id=workflow_id,
+        version=selected.version,
+        inputs=sorted(inferred.inputs),
+        outputs=sorted(inferred.outputs),
+        warnings=list(inferred.warnings),
+    )

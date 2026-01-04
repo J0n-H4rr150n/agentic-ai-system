@@ -316,3 +316,10 @@ All notable changes to this project will be documented in this file.
 - Nested execution uses parent state as initial state and merges subgraph final state back into the parent
 - Included a nested trace boundary under reserved `__agent__` output payload
 - Added backend end-to-end test for nested execution via `POST /api/run`
+
+### F00006_S006: Infer Input/Output Schema from Saved Graphs
+
+- Added `GET /api/workflow/{workflow_id}/schema` endpoint returning inferred `inputs`, `outputs`, and `warnings`
+- Implemented best-effort schema inference based on node types/config conventions (deterministic)
+- Supports nested `agent` nodes by resolving referenced workflows (bounded recursion)
+- Added backend tests covering schema inference results and nested agent schema inclusion
