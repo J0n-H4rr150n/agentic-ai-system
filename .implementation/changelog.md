@@ -277,3 +277,11 @@ All notable changes to this project will be documented in this file.
 - Added WebSocket run control endpoint: `WS /api/run/{id}/control`
 - WebSocket accepts JSON commands for pause/resume/cancel/HITL decisions and returns structured status responses
 - Added backend integration tests for WebSocket control behavior
+
+### F00006_S001: Persist Workflows (Save/Load) in Backend
+
+- Added workflow save/load endpoints:
+  - `POST /api/workflow` stores a validated graph and returns `workflow_id`
+  - `GET /api/workflow/{workflow_id}` returns the stored graph
+- Wired workflow router into the FastAPI app
+- Added backend tests for workflow create/get behavior

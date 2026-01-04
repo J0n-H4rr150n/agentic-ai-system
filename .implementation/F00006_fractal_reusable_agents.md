@@ -10,7 +10,7 @@ Allow saving graphs as reusable “agent nodes” that appear in the palette wit
 This enables composition: complex agents are built from smaller agents.
 
 ## Stories
-- [ ] S001: Persist workflows (save/load) in backend
+- [x] S001: Persist workflows (save/load) in backend
 - [ ] S002: “Save as Node” action (frontend)
 - [ ] S003: Version history for saved agent nodes
 - [ ] S004: Palette integration for saved agents
