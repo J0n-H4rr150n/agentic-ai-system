@@ -148,3 +148,10 @@ All notable changes to this project will be documented in this file.
 - Added provider-agnostic `LLMClient` protocol and normalized `LLMResponse` models
 - Added `LLMCallNode` that sources prompt from config or state and supports JSON mode
 - Added unit tests for prompt sourcing, JSON parsing, and validation
+
+### F00003_S003: LLM Call Node - Vertex AI Implementation
+
+- Added `VertexAILLMClient` implementing `LLMClient` using Vertex AI (Gemini)
+- Implemented lazy provider imports and `asyncio.to_thread(...)` execution to keep tests fast and avoid blocking
+- Added unit tests with fakes (no network)
+- Added `google-cloud-aiplatform` to Poetry + `backend/requirements.txt`

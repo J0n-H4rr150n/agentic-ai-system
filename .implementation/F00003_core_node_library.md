@@ -18,7 +18,7 @@ Implement the essential nodes needed for the security testing MVP workflow:
 
 - [x] S001: Start and End Nodes
 - [x] S002: LLM Call Node - Base Interface
-- [ ] S003: LLM Call Node - Vertex AI Implementation
+- [x] S003: LLM Call Node - Vertex AI Implementation
 - [ ] S004: LLM Tracing (tokens, timing, decision capture)
 - [ ] S005: Playwright Browser Node - Session Management
 - [ ] S006: Playwright Browser Node - Navigation & Actions
