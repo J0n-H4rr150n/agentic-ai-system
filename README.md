@@ -23,4 +23,4 @@ The backend uses Poetry for local dependency management and test runs.
 ## Notes
 
 - Docker images install Python dependencies via `pip` using `backend/requirements.txt`.
-
+- If you change backend dependencies, update both `backend/pyproject.toml` (Poetry) and `backend/requirements.txt` (Docker).

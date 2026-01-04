@@ -1,0 +1,14 @@
+# Pre-commit configuration
+#
+# Note: Keep this minimal until tooling is fully standardized.
+# If you add language-specific hooks later (ruff, eslint, prettier), ensure
+# backend/pyproject.toml + backend/requirements.txt stay in sync.
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-added-large-files
