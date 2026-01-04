@@ -24,7 +24,7 @@ Implement the essential nodes needed for the security testing MVP workflow:
 - [x] S006: Playwright Browser Node - Navigation & Actions
 - [x] S007: Playwright Browser Node - Observation Modes
 - [x] S008: HTTP Request Node
-- [ ] S009: Router Node with Conditions
+- [x] S009: Router Node with Conditions
 - [ ] S010: Node Registry & Auto-Discovery
 
 ## Acceptance Criteria
@@ -59,10 +59,10 @@ Implement the essential nodes needed for the security testing MVP workflow:
 - [x] Response captured: status, headers, body
 
 ### Router Node
-- [ ] Multiple output ports based on conditions
-- [ ] Conditions evaluate against state variables
-- [ ] Supports: equals, contains, regex, greater_than, less_than
-- [ ] Default/fallback output port
+- [x] Multiple output ports based on conditions
+- [x] Conditions evaluate against state variables
+- [x] Supports: equals, contains, regex, greater_than, less_than
+- [x] Default/fallback output port
 
 ## Technical Notes
 

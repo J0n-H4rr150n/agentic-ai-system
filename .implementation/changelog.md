@@ -184,3 +184,9 @@ All notable changes to this project will be documented in this file.
 - Added `HTTPRequestNode` using `httpx.AsyncClient` with configurable method/url/headers/body
 - Supports JSON body or form body (mutually exclusive) and captures response status/headers/body
 - Added unit tests using `httpx.MockTransport` (no network)
+
+### F00003_S009: Router Node with Conditions
+
+- Added `RouterNode` that selects a route based on state conditions
+- Supports operators: equals, contains, regex, greater_than, less_than with a default fallback
+- Added unit tests for match ordering, dotted-path state lookups, and invalid config validation
