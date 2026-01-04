@@ -423,12 +423,12 @@ All tracing data stored in Postgres for analysis and debugging.
 
 **Goal:** Draggable nodes, containers, bezier wiring on HTML5 canvas.
 
-- [ ] HTML5 Canvas grid with pan/zoom
-- [ ] Draggable node primitives (rectangle, diamond)
+- [x] HTML5 Canvas grid with pan/zoom
+- [x] Draggable node primitives (rectangle, diamond)
 - [ ] Container detection (nodes know their parent)
-- [ ] Bezier curve wiring with connection validation
-- [ ] Serialization to JSON graph format
-- [ ] Basic node palette (static nodes)
+- [x] Bezier curve wiring with connection validation
+- [x] Serialization to JSON graph format
+- [x] Basic node palette (static nodes)
 
 **Deliverable:** Canvas where you can place nodes, wire them, export JSON.
 
@@ -438,13 +438,13 @@ All tracing data stored in Postgres for analysis and debugging.
 
 **Goal:** Python backend that executes graph JSON with parallel node support.
 
-- [ ] FastAPI endpoint: `POST /api/run` accepts graph JSON
-- [ ] Graph parser → execution plan with dependency resolution
-- [ ] Parallel node execution (asyncio)
-- [ ] State object passed through graph
+- [x] FastAPI endpoint: `POST /api/run` accepts graph JSON
+- [x] Graph parser → execution plan with dependency resolution
+- [x] Parallel node execution (asyncio)
+- [x] State object passed through graph
 - [ ] Redis integration for checkpoints
 - [ ] Execution modes: validate, test, simulate, run
-- [ ] Step-by-step tracing/logging
+- [x] Step-by-step tracing/logging
 
 **Deliverable:** API that runs a graph and returns execution trace.
 
@@ -455,17 +455,17 @@ All tracing data stored in Postgres for analysis and debugging.
 **Goal:** Essential nodes for the security testing MVP.
 
 #### Action Nodes
-- [ ] **LLM Call** — Provider-agnostic (Vertex AI default), model selection per-node
-- [ ] **HTTP Request** — Raw HTTP with headers/body
+- [x] **LLM Call** — Provider-agnostic (Vertex AI default), model selection per-node
+- [x] **HTTP Request** — Raw HTTP with headers/body
 - [ ] **Code Executor** — Python snippet execution
 - [ ] **HTTP Fuzzer** — Batched requests with LLM-driven analysis loop
 
 #### Browser Nodes
-- [ ] **Playwright Browser** — All observation modes (screenshot, SoM, HTML, network)
-- [ ] **Browser Action** — Click, type, navigate (consumes session_id)
+- [x] **Playwright Browser** — All observation modes (screenshot, SoM, HTML, network)
+- [x] **Browser Action** — Click, type, navigate (consumes session_id)
 
 #### Control Nodes
-- [ ] **Router** — Conditional branching with dynamic output ports
+- [x] **Router** — Conditional branching with dynamic output ports
 - [ ] **Loop** — Iterate with break condition
 - [ ] **Parallel Gate** — Fork/join for parallel branches
 
@@ -623,7 +623,6 @@ For production deployment with ephemeral container runners using **GKE + Kuberne
 
 ## Next Steps
 
-1. **Approve this plan** or provide feedback
-2. Begin Phase 1: Canvas Engine Foundation
-3. Set up Docker/Docker Compose skeleton
-4. Create initial project structure
+1. Begin Phase 4: Execution Control & Human-in-the-Loop
+2. Add Redis checkpoints + pause/resume/force-stop control surface
+3. Add WebSocket-based runtime controls (2-way)

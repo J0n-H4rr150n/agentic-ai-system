@@ -44,6 +44,24 @@ class PortDefinition(BaseModel):
     label: str | None = None
 
 
+class InterruptConfig(BaseModel):
+    """Human-in-the-loop interrupt configuration for a node.
+
+    This is configuration-only in early stories; executor pause/resume behavior
+    is implemented separately.
+    """
+
+    before: bool = False
+    after: bool = False
+    reason: str | None = Field(default=None, max_length=280)
+
+    @model_validator(mode="after")
+    def _validate_flags(self) -> "InterruptConfig":
+        if not (self.before or self.after):
+            raise ValueError("InterruptConfig must set before and/or after")
+        return self
+
+
 class NodeDefinition(BaseModel):
     """A node instance on the canvas."""
 
@@ -56,6 +74,7 @@ class NodeDefinition(BaseModel):
 
     ports: list[PortDefinition] = Field(default_factory=list)
     config: dict[str, Any] = Field(default_factory=dict)
+    interrupt: InterruptConfig | None = None
 
     @model_validator(mode="after")
     def _normalize(self) -> "NodeDefinition":

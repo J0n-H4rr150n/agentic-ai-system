@@ -236,3 +236,9 @@ All notable changes to this project will be documented in this file.
 - Added an HTTP-backed page implementation for browser-node tests (no Playwright dependency)
 - Added a backend E2E test that runs a graph against an in-process local HTTP server
 - Updated default sample workflow target URL and improved trace screenshot extraction for nested outputs
+
+### F00005_S001: Interrupt Point Configuration on Nodes
+
+- Added `interrupt` configuration to graph node schema with validation (before/after + optional reason)
+- Plumbed interrupt configs into the runner execution plan for later pause/resume stories
+- Added backend unit tests for interrupt validation and plan plumbing

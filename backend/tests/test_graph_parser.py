@@ -17,6 +17,7 @@ def test_parse_graph_builds_adjacency() -> None:
                     "size": {"width": 1, "height": 1},
                     "ports": [{"id": "a:out:1", "kind": "output"}],
                     "config": {},
+                    "interrupt": {"before": True, "reason": "Approve start"},
                 },
                 {
                     "id": "b",
@@ -37,6 +38,10 @@ def test_parse_graph_builds_adjacency() -> None:
     assert plan.node_ids == ["a", "b"]
     assert plan.outgoing == {"a": ["b"], "b": []}
     assert plan.incoming == {"a": [], "b": ["a"]}
+    assert "a" in plan.interrupts
+    assert plan.interrupts["a"].before is True
+    assert plan.interrupts["a"].after is False
+    assert plan.interrupts["a"].reason == "Approve start"
 
 
 def test_parse_graph_rejects_unknown_node_type() -> None:

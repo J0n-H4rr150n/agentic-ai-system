@@ -5,9 +5,9 @@ Converts a validated GraphDefinition into a runner-friendly ExecutionPlan.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
-from backend.models.graph import GraphDefinition
+from backend.models.graph import GraphDefinition, InterruptConfig
 from backend.nodes.registry import NodeRegistry
 
 
@@ -16,6 +16,7 @@ class ExecutionPlan:
     node_ids: list[str]
     outgoing: dict[str, list[str]]
     incoming: dict[str, list[str]]
+    interrupts: dict[str, InterruptConfig] = field(default_factory=dict)
 
 
 def parse_graph(graph: GraphDefinition, registry: NodeRegistry | None = None) -> ExecutionPlan:
@@ -51,4 +52,9 @@ def parse_graph(graph: GraphDefinition, registry: NodeRegistry | None = None) ->
         outgoing[node_id] = sorted(outgoing[node_id])
         incoming[node_id] = sorted(incoming[node_id])
 
-    return ExecutionPlan(node_ids=node_ids, outgoing=outgoing, incoming=incoming)
+    interrupts: dict[str, InterruptConfig] = {}
+    for node in graph.nodes:
+        if node.interrupt is not None:
+            interrupts[node.id] = node.interrupt
+
+    return ExecutionPlan(node_ids=node_ids, outgoing=outgoing, incoming=incoming, interrupts=interrupts)
