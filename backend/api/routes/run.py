@@ -21,6 +21,8 @@ from pydantic import BaseModel
 from backend.models.graph import GraphDefinition
 from backend.models.run import StepTrace
 from backend.nodes.builtin import NoopNode
+from backend.nodes.control.end import EndNode
+from backend.nodes.control.start import StartNode
 from backend.runner.dependency import topological_sort
 from backend.runner.executor import AsyncExecutor
 from backend.runner.graph_parser import parse_graph
@@ -86,7 +88,14 @@ async def _execute_run(run_id: str, request: RunRequest) -> None:
         # Detect cycles early with a clear error.
         topological_sort(plan)
 
-        nodes = {node.id: NoopNode(node_id=node.id, node_type=node.type) for node in request.graph.nodes}
+        def _build_node(node_type: str, node_id: str, config: dict[str, Any]) -> NoopNode | StartNode | EndNode:
+            if node_type == "start":
+                return StartNode(node_id, config=config)
+            if node_type == "end":
+                return EndNode(node_id, config=config)
+            return NoopNode(node_id=node_id, node_type=node_type)
+
+        nodes = {node.id: _build_node(node.type, node.id, node.config) for node in request.graph.nodes}
         executor = AsyncExecutor()
         await executor.run(plan, nodes, state=StateContainer(), tracer=tracer)
 

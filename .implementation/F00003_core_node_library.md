@@ -1,6 +1,6 @@
 # F00003: Core Node Library
 
-**Status:** 🔵 Planned
+**Status:** 🟡 In Progress
 **Phase:** 1 (MVP)
 **Priority:** P0 (Critical)
 **Target:** Today
@@ -16,7 +16,7 @@ Implement the essential nodes needed for the security testing MVP workflow:
 
 ## Stories
 
-- [ ] S001: Start and End Nodes
+- [x] S001: Start and End Nodes
 - [ ] S002: LLM Call Node - Base Interface
 - [ ] S003: LLM Call Node - Vertex AI Implementation
 - [ ] S004: LLM Tracing (tokens, timing, decision capture)
@@ -30,8 +30,8 @@ Implement the essential nodes needed for the security testing MVP workflow:
 ## Acceptance Criteria
 
 ### Start/End Nodes
-- [ ] Start node initializes run state
-- [ ] End node finalizes run and returns result
+- [x] Start node initializes run state
+- [x] End node finalizes run and returns result
 
 ### LLM Call Node
 - [ ] Configurable model selection (gemini-2.5-flash, gemini-2.5-pro)
@@ -116,22 +116,22 @@ backend/
 ```python
 class BaseNode(ABC):
     node_type: str
-    
+
     @abstractmethod
     async def execute(
-        self, 
-        state: StateContainer, 
+        self,
+        state: StateContainer,
         config: dict,
         context: ExecutionContext
     ) -> NodeResult:
         """Execute the node and return result."""
         pass
-    
+
     @classmethod
     def get_input_schema(cls) -> dict:
         """JSON Schema for node inputs/config."""
         pass
-    
+
     @classmethod
     def get_output_schema(cls) -> dict:
         """JSON Schema for node outputs."""

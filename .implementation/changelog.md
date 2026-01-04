@@ -134,3 +134,11 @@ All notable changes to this project will be documented in this file.
 - Added `GET /api/run/{id}/stream` SSE endpoint for step updates
 - Stream emits step events as nodes complete and a terminal status event
 - Added unit test validating streaming behavior
+
+### F00003_S001: Start and End Nodes
+
+- Added `StartNode` and `EndNode` under `backend/nodes/control/`
+- Start node supports injecting `initial_state` into the run
+- End node returns a final state snapshot under a configurable `result_key`
+- Wired run execution to instantiate Start/End nodes by type
+- Added unit tests for Start/End node behavior
