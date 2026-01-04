@@ -40,3 +40,19 @@ test("serializeGraph includes nodes, edges, positions, configs", () => {
   assert.equal(graph.edges[0].from.nodeId, a.id);
   assert.equal(graph.edges[0].to.nodeId, b.id);
 });
+
+test("serializeGraph excludes UI-only container nodes", () => {
+  const nodeManager = new NodeManager();
+  const wireManager = new WireManager();
+
+  const container = nodeManager.addFromPalette({ type: "container", title: "Group", position: { x: 0, y: 0 } });
+  const a = nodeManager.addFromPalette({ type: "start", title: "Start", position: { x: 10, y: 20 } });
+
+  // Sanity check: container exists in node manager.
+  assert.ok(container);
+  assert.equal(container.type, "container");
+
+  const graph = serializeGraph({ nodeManager, wireManager });
+  assert.equal(graph.nodes.some((n) => n.type === "container"), false);
+  assert.ok(graph.nodes.find((n) => n.id === a.id));
+});

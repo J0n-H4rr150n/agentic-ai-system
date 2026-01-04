@@ -78,6 +78,12 @@ All notable changes to this project will be documented in this file.
 - Added `Port` model (input/output) with validation and default ports per node type
 - Rendered ports on nodes (viewport-aware)
 - Added port layout + hit-testing helpers (NodeManager)
+
+### F00001_S012: Container Detection (Nodes Know Their Parent)
+
+- Added UI-only container nodes and containment detection (`parentId`)
+- Ensured container nodes are excluded from serialized graphs to avoid impacting backend execution
+- Added unit tests for containment selection and serialization filtering
 - Added unit tests for port layout and hit-testing
 
 ### F00001_S010: Bezier Curve Wiring

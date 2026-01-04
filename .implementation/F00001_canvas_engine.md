@@ -22,6 +22,7 @@ Build the core visual canvas where users can drag nodes from a palette, place th
 - [x] S009: Port System (Input/Output)
 - [x] S010: Bezier Curve Wiring
 - [x] S011: Graph Serialization to JSON
+- [x] S012: Container Detection (nodes know their parent)
 
 ## Acceptance Criteria
 

@@ -75,6 +75,7 @@ export class SelectionManager {
       }
 
       node.position = snapPositionToGrid(node.position, this.gridSize);
+      this.nodeManager.updateParentForNode?.(node);
     };
   }
 

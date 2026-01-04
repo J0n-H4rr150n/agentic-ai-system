@@ -32,6 +32,9 @@ export class BaseNode {
     this.ports = ports ?? createDefaultPortsForNodeType({ nodeId: this.id, type: this.type });
 
     this.config = config && typeof config === "object" && !Array.isArray(config) ? config : {};
+
+    // UI-only grouping metadata.
+    this.parentId = null;
   }
 
   getBoundsWorld() {

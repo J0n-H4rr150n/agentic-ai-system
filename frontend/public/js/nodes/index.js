@@ -1,6 +1,12 @@
 import { BaseNode } from "./base.js";
+import { ContainerNode } from "./container.js";
 import { createId } from "../utils/id.js";
 import { getPortHitAtWorldPoint } from "./port.js";
+import { findContainingContainerId } from "./container-math.js";
+
+function isContainerNode(node) {
+  return node?.type === "container";
+}
 
 export class NodeManager {
   constructor() {
@@ -16,18 +22,38 @@ export class NodeManager {
   }
 
   addFromPalette({ type, title, position }) {
-    const node = new BaseNode({
-      id: createId(`node-${type}`),
+    const id = createId(`node-${type}`);
+    let node;
+
+    if (type === "container") {
+      node = new ContainerNode({
+        id,
+        title,
+        position,
+        size: { width: 420, height: 280 },
+      });
+      // Keep containers behind regular nodes.
+      this._nodes.unshift(node);
+      return node;
+    }
+
+    node = new BaseNode({
+      id,
       type,
       title,
       position,
     });
     this.add(node);
+    this.updateParentForNode(node);
     return node;
   }
 
   getNodes() {
     return this._nodes;
+  }
+
+  getContainers() {
+    return this._nodes.filter((n) => isContainerNode(n));
   }
 
   getById(id) {
@@ -43,6 +69,28 @@ export class NodeManager {
       }
     }
     return null;
+  }
+
+  updateParentForNode(node) {
+    if (!node) {
+      return;
+    }
+
+    const nodeId = node.id;
+    if (typeof nodeId !== "string" || !nodeId) {
+      return;
+    }
+
+    const containers = this.getContainers()
+      .filter((c) => c.id !== nodeId)
+      .map((c) => ({ id: c.id, boundsWorld: c.getBoundsWorld() }));
+
+    const containerId = findContainingContainerId({
+      nodeBoundsWorld: node.getBoundsWorld(),
+      containers,
+    });
+
+    node.parentId = containerId;
   }
 
   getPortAtWorldPoint(point, options = {}) {
@@ -63,6 +111,10 @@ export class NodeManager {
   }
 
   bringToFront(node) {
+    if (isContainerNode(node)) {
+      // Keep containers behind their contents.
+      return;
+    }
     const index = this._nodes.indexOf(node);
     if (index === -1 || index === this._nodes.length - 1) {
       return;

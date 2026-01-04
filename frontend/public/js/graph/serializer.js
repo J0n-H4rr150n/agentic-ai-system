@@ -17,7 +17,10 @@ export function serializeGraph({ nodeManager, wireManager }) {
     throw new Error("wireManager must provide getWires()");
   }
 
-  const nodes = nodeManager.getNodes().map((node) => {
+  const nodes = nodeManager
+    .getNodes()
+    .filter((node) => node?.type !== "container")
+    .map((node) => {
     if (!isNonEmptyString(node.id) || !isNonEmptyString(node.type)) {
       throw new Error("All nodes must have non-empty id and type");
     }
@@ -38,7 +41,7 @@ export function serializeGraph({ nodeManager, wireManager }) {
       })),
       config: normalizeConfig(node.config),
     };
-  });
+    });
 
   const edges = wireManager.getWires().map((wire) => {
     if (!isNonEmptyString(wire.id)) {

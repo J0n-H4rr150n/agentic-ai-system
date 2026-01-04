@@ -1,5 +1,10 @@
 export const PALETTE_CATEGORIES = [
   {
+    id: "layout",
+    title: "Layout",
+    items: [{ type: "container", title: "Container" }],
+  },
+  {
     id: "control",
     title: "Control",
     items: [
