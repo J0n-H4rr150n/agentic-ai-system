@@ -159,6 +159,19 @@ def _infer_node_schema(
 
         return InferredIOSchema(inputs=inputs, outputs=outputs, warnings=warnings)
 
+    if node_type == "code_executor":
+        output_key = cfg.get("output_key", "code_output")
+        if isinstance(output_key, str) and output_key:
+            outputs.add(output_key)
+
+        input_keys = cfg.get("input_keys")
+        if isinstance(input_keys, list):
+            for key in input_keys:
+                if isinstance(key, str) and key:
+                    inputs.add(_root_key(key))
+
+        return InferredIOSchema(inputs=inputs, outputs=outputs, warnings=warnings)
+
     if node_type == "agent":
         outputs.add("__agent__")
 

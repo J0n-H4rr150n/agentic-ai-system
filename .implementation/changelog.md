@@ -6,6 +6,11 @@ All notable changes to this project will be documented in this file.
 
 ## 2026-01-04
 
+### F00003_S011: Code Executor Node
+- Add `code_executor` backend node with restricted expression evaluation
+- Wire into node factory and workflow schema inference
+- Expose node in palette and fix HTTP node type to `http_request`
+
 ### Planning Complete
 
 - Created comprehensive `plan.md` with:

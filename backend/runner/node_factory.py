@@ -18,6 +18,7 @@ from backend.nodes.control.start import StartNode
 from backend.nodes.http.request import HTTPRequestNode
 from backend.nodes.llm.base import LLMCallNode
 from backend.nodes.llm.fake_client import FakeLLMClient
+from backend.nodes.code_executor import CodeExecutorNode
 from backend.nodes.browser.node import BrowserNode
 from backend.nodes.browser.session import BrowserSession, BrowserSessionManager
 from backend.nodes.browser.httpx_page import HttpxPage
@@ -71,6 +72,8 @@ def build_nodes_for_graph(*, run_id: str, graph_nodes: list[Any]) -> dict[str, B
                 session_factory=session_factory,
                 config=config,
             )
+        elif node_type == "code_executor":
+            created = CodeExecutorNode(node_id, config=config)
         elif node_type == "agent":
             created = AgentNode(node_id, run_id=run_id, store=WORKFLOW_STORE, config=config)
         else:

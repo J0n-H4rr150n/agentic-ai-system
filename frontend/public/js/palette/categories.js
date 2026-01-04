@@ -19,7 +19,8 @@ export const PALETTE_CATEGORIES = [
     items: [
       { type: "browser", title: "Browser" },
       { type: "llm", title: "LLM" },
-      { type: "http", title: "HTTP Request" },
+      { type: "http_request", title: "HTTP Request" },
+      { type: "code_executor", title: "Code Executor" },
     ],
   },
 ];
