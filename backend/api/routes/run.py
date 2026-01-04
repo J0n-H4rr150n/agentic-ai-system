@@ -21,7 +21,7 @@ from pydantic import BaseModel
 from backend.models.graph import GraphDefinition
 from backend.models.run import RunCheckpoint, StepTrace
 from backend.runner.dependency import topological_sort
-from backend.runner.executor import AsyncExecutor, ExecutionCheckpoint, RunPaused
+from backend.runner.executor import AsyncExecutor, ExecutionCheckpoint, RunCancelled, RunPaused
 from backend.runner.graph_parser import parse_graph
 from backend.runner.node_factory import build_nodes_for_graph
 from backend.runner.state import StateContainer
@@ -29,7 +29,7 @@ from backend.runner.tracer import StepTracer
 
 
 RunMode = Literal["run", "simulate", "test"]
-RunStatus = Literal["running", "paused", "completed", "failed"]
+RunStatus = Literal["running", "paused", "completed", "failed", "cancelled"]
 
 
 class RunRequest(BaseModel):
@@ -64,6 +64,7 @@ class _RunRecord:
     error: str | None = None
     events: queue.Queue[str | None] = field(default_factory=queue.Queue)
     pause_requested: bool = False
+    cancel_requested: bool = False
     checkpoint: RunCheckpoint | None = None
 
 
@@ -91,6 +92,11 @@ async def _execute_run(run_id: str, request: RunRequest) -> None:
             rec = _RUNS.get(run_id)
             return bool(rec is not None and rec.pause_requested)
 
+    def _should_cancel() -> bool:
+        with _RUNS_LOCK:
+            rec = _RUNS.get(run_id)
+            return bool(rec is not None and rec.cancel_requested)
+
     try:
         plan = parse_graph(request.graph)
         # Detect cycles early with a clear error.
@@ -98,7 +104,14 @@ async def _execute_run(run_id: str, request: RunRequest) -> None:
 
         nodes = build_nodes_for_graph(run_id=run_id, graph_nodes=request.graph.nodes)
         executor = AsyncExecutor()
-        await executor.run(plan, nodes, state=StateContainer(), tracer=tracer, should_pause=_should_pause)
+        await executor.run(
+            plan,
+            nodes,
+            state=StateContainer(),
+            tracer=tracer,
+            should_pause=_should_pause,
+            should_cancel=_should_cancel,
+        )
 
         with _RUNS_LOCK:
             rec = _RUNS[run_id]
@@ -109,6 +122,21 @@ async def _execute_run(run_id: str, request: RunRequest) -> None:
             rec.error = None
 
         record.events.put(_format_sse(event="status", data={"run_id": run_id, "status": "completed"}))
+        record.events.put(None)
+
+    except RunCancelled:
+        with _RUNS_LOCK:
+            rec = _RUNS[run_id]
+            rec.status = "cancelled"
+            rec.pause_requested = False
+            rec.cancel_requested = False
+            rec.paused_at = None
+            rec.completed_at = _now_utc()
+            rec.trace = tracer.steps()
+            rec.error = None
+            rec.checkpoint = None
+
+        record.events.put(_format_sse(event="status", data={"run_id": run_id, "status": "cancelled"}))
         record.events.put(None)
 
     except RunPaused as paused:
@@ -167,6 +195,11 @@ async def _resume_run(run_id: str) -> None:
             rec = _RUNS.get(run_id)
             return bool(rec is not None and rec.pause_requested)
 
+    def _should_cancel() -> bool:
+        with _RUNS_LOCK:
+            rec = _RUNS.get(run_id)
+            return bool(rec is not None and rec.cancel_requested)
+
     try:
         plan = parse_graph(request.graph)
         topological_sort(plan)
@@ -181,7 +214,14 @@ async def _resume_run(run_id: str) -> None:
             indegree=dict(checkpoint.indegree),
         )
 
-        await executor.run(plan, nodes, checkpoint=exec_checkpoint, tracer=tracer, should_pause=_should_pause)
+        await executor.run(
+            plan,
+            nodes,
+            checkpoint=exec_checkpoint,
+            tracer=tracer,
+            should_pause=_should_pause,
+            should_cancel=_should_cancel,
+        )
 
         with _RUNS_LOCK:
             rec = _RUNS[run_id]
@@ -192,6 +232,21 @@ async def _resume_run(run_id: str) -> None:
             rec.error = None
 
         record.events.put(_format_sse(event="status", data={"run_id": run_id, "status": "completed"}))
+        record.events.put(None)
+
+    except RunCancelled:
+        with _RUNS_LOCK:
+            rec = _RUNS[run_id]
+            rec.status = "cancelled"
+            rec.pause_requested = False
+            rec.cancel_requested = False
+            rec.paused_at = None
+            rec.completed_at = _now_utc()
+            rec.trace = tracer.steps()
+            rec.error = None
+            rec.checkpoint = None
+
+        record.events.put(_format_sse(event="status", data={"run_id": run_id, "status": "cancelled"}))
         record.events.put(None)
 
     except RunPaused as paused:
@@ -289,6 +344,35 @@ async def pause_run(run_id: str) -> RunControlResponse:
         # Idempotent: pausing a paused/completed/failed run does nothing.
         if record.status == "running":
             record.pause_requested = True
+
+        return RunControlResponse(run_id=record.run_id, status=record.status)
+
+
+@router.post("/api/run/{run_id}/cancel", response_model=RunControlResponse)
+async def cancel_run(run_id: str) -> RunControlResponse:
+    with _RUNS_LOCK:
+        record = _RUNS.get(run_id)
+
+        if record is None:
+            raise HTTPException(status_code=404, detail="run_id not found")
+
+        # Idempotent: cancelling a cancelled/completed/failed run does nothing.
+        if record.status == "running":
+            record.cancel_requested = True
+            record.pause_requested = False
+        elif record.status == "paused":
+            record.status = "cancelled"
+            record.pause_requested = False
+            record.cancel_requested = False
+            record.paused_at = None
+            record.completed_at = _now_utc()
+            record.error = None
+            record.checkpoint = None
+
+            # Provide a fresh stream for clients to observe the terminal status.
+            record.events = queue.Queue()
+            record.events.put(_format_sse(event="status", data={"run_id": run_id, "status": "cancelled"}))
+            record.events.put(None)
 
         return RunControlResponse(run_id=record.run_id, status=record.status)
 

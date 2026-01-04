@@ -256,3 +256,9 @@ All notable changes to this project will be documented in this file.
 - Updated executor to resume from a persisted checkpoint without re-running completed nodes
 - Ensured step tracing continues with monotonically increasing step ids across pause/resume
 - Added backend integration tests for pause → resume → completed
+
+### F00005_S004: Force-stop Mechanism (Cancel Run)
+
+- Added cancel control endpoint (`POST /api/run/{id}/cancel`) and terminal `cancelled` run status
+- Updated executor to honor cancel requests at safe batch boundaries (no partial batch cancellation)
+- Added backend integration tests for cancelling running runs and cancelling paused runs

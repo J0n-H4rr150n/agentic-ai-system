@@ -42,6 +42,14 @@ class RunPaused(Exception):
         self.checkpoint = checkpoint
 
 
+class RunCancelled(Exception):
+    """Raised by the executor when a cancel is requested at a safe boundary."""
+
+    def __init__(self, checkpoint: ExecutionCheckpoint) -> None:
+        super().__init__("Run cancelled")
+        self.checkpoint = checkpoint
+
+
 @dataclass(slots=True)
 class AsyncExecutor:
     """Executes a graph plan using asyncio for parallel-ready nodes."""
@@ -54,6 +62,7 @@ class AsyncExecutor:
         checkpoint: ExecutionCheckpoint | None = None,
         tracer: StepTracer | None = None,
         should_pause: Callable[[], bool] | None = None,
+        should_cancel: Callable[[], bool] | None = None,
     ) -> StateContainer:
         """Execute the plan.
 
@@ -154,6 +163,16 @@ class AsyncExecutor:
                     indegree[neighbor] -= 1
                     if indegree[neighbor] == 0:
                         ready.append(neighbor)
+
+            if should_cancel is not None and should_cancel():
+                raise RunCancelled(
+                    ExecutionCheckpoint(
+                        state=run_state.to_dict(),
+                        completed_node_ids=sorted(completed),
+                        ready_node_ids=sorted(ready),
+                        indegree=dict(indegree),
+                    )
+                )
 
             if should_pause is not None and should_pause():
                 raise RunPaused(
