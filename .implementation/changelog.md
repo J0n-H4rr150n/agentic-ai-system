@@ -198,6 +198,13 @@ All notable changes to this project will be documented in this file.
 - Updated graph parsing to validate supported node types via the registry
 - Added unit tests for discovery idempotency and graph parsing validation
 
+### F00007_S001: Persist Run Metadata + Step Traces
+
+- Added in-memory run history store for terminal run records
+- Persisted terminal run metadata and step traces on run completion/failure/cancel
+- Added `GET /api/runs` and `GET /api/runs/{run_id}` endpoints for browsing run history
+- Added backend tests covering persistence + API behavior
+
 ### F00004_S001: API Client Module (Frontend)
 
 - Added `frontend/public/js/api/client.js` fetch wrapper with JSON handling and typed errors

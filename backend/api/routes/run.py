@@ -27,6 +27,7 @@ from backend.runner.graph_parser import parse_graph
 from backend.runner.node_factory import build_nodes_for_graph
 from backend.runner.state import StateContainer
 from backend.runner.tracer import StepTracer
+from backend.runs.store import RUN_HISTORY_STORE
 
 
 RunMode = Literal["run", "simulate", "test"]
@@ -136,6 +137,15 @@ async def _execute_run(run_id: str, request: RunRequest) -> None:
             rec.pending_interrupt = None
             rec.checkpoint = None
 
+            RUN_HISTORY_STORE.persist_terminal(
+                run_id=rec.run_id,
+                status="completed",
+                started_at=rec.started_at,
+                completed_at=rec.completed_at,
+                trace=rec.trace,
+                error=rec.error,
+            )
+
         record.events.put(_format_sse(event="status", data={"run_id": run_id, "status": "completed"}))
         record.events.put(None)
 
@@ -152,6 +162,15 @@ async def _execute_run(run_id: str, request: RunRequest) -> None:
             rec.checkpoint = None
             rec.pause_reason = None
             rec.pending_interrupt = None
+
+            RUN_HISTORY_STORE.persist_terminal(
+                run_id=rec.run_id,
+                status="cancelled",
+                started_at=rec.started_at,
+                completed_at=rec.completed_at,
+                trace=rec.trace,
+                error=rec.error,
+            )
 
         record.events.put(_format_sse(event="status", data={"run_id": run_id, "status": "cancelled"}))
         record.events.put(None)
@@ -234,6 +253,15 @@ async def _execute_run(run_id: str, request: RunRequest) -> None:
             rec.pause_reason = None
             rec.pending_interrupt = None
             rec.checkpoint = None
+
+            RUN_HISTORY_STORE.persist_terminal(
+                run_id=rec.run_id,
+                status="failed",
+                started_at=rec.started_at,
+                completed_at=rec.completed_at,
+                trace=rec.trace,
+                error=rec.error,
+            )
 
         record.events.put(
             _format_sse(event="status", data={"run_id": run_id, "status": "failed", "error": str(exc)})
@@ -499,6 +527,15 @@ def _request_cancel_locked(record: _RunRecord) -> _RunRecord:
         record.checkpoint = None
         record.pause_reason = None
         record.pending_interrupt = None
+
+        RUN_HISTORY_STORE.persist_terminal(
+            run_id=record.run_id,
+            status="cancelled",
+            started_at=record.started_at,
+            completed_at=record.completed_at,
+            trace=record.trace,
+            error=record.error,
+        )
 
         # Provide a fresh stream for SSE clients to observe the terminal status.
         record.events = queue.Queue()
