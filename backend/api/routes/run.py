@@ -5,13 +5,13 @@ MVP: in-memory run storage and background execution.
 
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+import threading
 from typing import Any, Literal
 from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException
 from pydantic import BaseModel
 
 from backend.models.graph import GraphDefinition
@@ -58,7 +58,7 @@ class _RunRecord:
 
 
 _RUNS: dict[str, _RunRecord] = {}
-_RUNS_LOCK = asyncio.Lock()
+_RUNS_LOCK = threading.Lock()
 
 router = APIRouter()
 
@@ -79,7 +79,7 @@ async def _execute_run(run_id: str, request: RunRequest) -> None:
         executor = AsyncExecutor()
         await executor.run(plan, nodes, state=StateContainer(), tracer=tracer)
 
-        async with _RUNS_LOCK:
+        with _RUNS_LOCK:
             rec = _RUNS[run_id]
             rec.status = "completed"
             rec.completed_at = _now_utc()
@@ -87,7 +87,7 @@ async def _execute_run(run_id: str, request: RunRequest) -> None:
             rec.error = None
 
     except Exception as exc:  # noqa: BLE001
-        async with _RUNS_LOCK:
+        with _RUNS_LOCK:
             rec = _RUNS[run_id]
             rec.status = "failed"
             rec.completed_at = _now_utc()
@@ -96,20 +96,20 @@ async def _execute_run(run_id: str, request: RunRequest) -> None:
 
 
 @router.post("/api/run", response_model=RunCreatedResponse)
-async def create_run(request: RunRequest) -> RunCreatedResponse:
+async def create_run(request: RunRequest, background_tasks: BackgroundTasks) -> RunCreatedResponse:
     run_id = str(uuid4())
     record = _RunRecord(run_id=run_id, status="running", started_at=_now_utc())
 
-    async with _RUNS_LOCK:
+    with _RUNS_LOCK:
         _RUNS[run_id] = record
 
-    asyncio.create_task(_execute_run(run_id, request))
+    background_tasks.add_task(_execute_run, run_id, request)
     return RunCreatedResponse(run_id=run_id, status="running")
 
 
 @router.get("/api/run/{run_id}", response_model=RunStatusResponse)
 async def get_run(run_id: str) -> RunStatusResponse:
-    async with _RUNS_LOCK:
+    with _RUNS_LOCK:
         record = _RUNS.get(run_id)
 
     if record is None:
