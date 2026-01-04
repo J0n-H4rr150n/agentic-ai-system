@@ -21,7 +21,7 @@ from pydantic import BaseModel
 from backend.models.graph import GraphDefinition
 from backend.models.run import RunCheckpoint, StepTrace
 from backend.runner.dependency import topological_sort
-from backend.runner.executor import AsyncExecutor, RunPaused
+from backend.runner.executor import AsyncExecutor, ExecutionCheckpoint, RunPaused
 from backend.runner.graph_parser import parse_graph
 from backend.runner.node_factory import build_nodes_for_graph
 from backend.runner.state import StateContainer
@@ -57,6 +57,7 @@ class _RunRecord:
     run_id: str
     status: RunStatus
     started_at: datetime
+    request: RunRequest
     paused_at: datetime | None = None
     completed_at: datetime | None = None
     trace: list[StepTrace] = field(default_factory=list)
@@ -147,6 +148,89 @@ async def _execute_run(run_id: str, request: RunRequest) -> None:
         record.events.put(None)
 
 
+async def _resume_run(run_id: str) -> None:
+    with _RUNS_LOCK:
+        record = _RUNS[run_id]
+        request = record.request
+        checkpoint = record.checkpoint
+
+    if checkpoint is None:
+        raise RuntimeError("Cannot resume without a checkpoint")
+
+    def _emit_step(step: StepTrace) -> None:
+        record.events.put(_format_sse(event="step", data=step.model_dump()))
+
+    tracer = StepTracer.from_existing(record.trace, on_record=_emit_step)
+
+    def _should_pause() -> bool:
+        with _RUNS_LOCK:
+            rec = _RUNS.get(run_id)
+            return bool(rec is not None and rec.pause_requested)
+
+    try:
+        plan = parse_graph(request.graph)
+        topological_sort(plan)
+
+        nodes = build_nodes_for_graph(run_id=run_id, graph_nodes=request.graph.nodes)
+        executor = AsyncExecutor()
+
+        exec_checkpoint = ExecutionCheckpoint(
+            state=dict(checkpoint.state),
+            completed_node_ids=list(checkpoint.completed_node_ids),
+            ready_node_ids=list(checkpoint.ready_node_ids),
+            indegree=dict(checkpoint.indegree),
+        )
+
+        await executor.run(plan, nodes, checkpoint=exec_checkpoint, tracer=tracer, should_pause=_should_pause)
+
+        with _RUNS_LOCK:
+            rec = _RUNS[run_id]
+            rec.status = "completed"
+            rec.paused_at = None
+            rec.completed_at = _now_utc()
+            rec.trace = tracer.steps()
+            rec.error = None
+
+        record.events.put(_format_sse(event="status", data={"run_id": run_id, "status": "completed"}))
+        record.events.put(None)
+
+    except RunPaused as paused:
+        new_checkpoint = RunCheckpoint(
+            run_id=run_id,
+            created_at=_now_utc(),
+            state=paused.checkpoint.state,
+            completed_node_ids=list(paused.checkpoint.completed_node_ids),
+            ready_node_ids=list(paused.checkpoint.ready_node_ids),
+            indegree=dict(paused.checkpoint.indegree),
+        )
+
+        with _RUNS_LOCK:
+            rec = _RUNS[run_id]
+            rec.status = "paused"
+            rec.paused_at = _now_utc()
+            rec.completed_at = None
+            rec.trace = tracer.steps()
+            rec.error = None
+            rec.checkpoint = new_checkpoint
+
+        record.events.put(_format_sse(event="status", data={"run_id": run_id, "status": "paused"}))
+        record.events.put(None)
+
+    except Exception as exc:  # noqa: BLE001
+        with _RUNS_LOCK:
+            rec = _RUNS[run_id]
+            rec.status = "failed"
+            rec.paused_at = None
+            rec.completed_at = _now_utc()
+            rec.trace = tracer.steps()
+            rec.error = str(exc)
+
+        record.events.put(
+            _format_sse(event="status", data={"run_id": run_id, "status": "failed", "error": str(exc)})
+        )
+        record.events.put(None)
+
+
 def _format_sse(*, event: str, data: dict[str, Any]) -> str:
     payload = json.dumps(data, separators=(",", ":"), ensure_ascii=False)
     return f"event: {event}\ndata: {payload}\n\n"
@@ -155,7 +239,7 @@ def _format_sse(*, event: str, data: dict[str, Any]) -> str:
 @router.post("/api/run", response_model=RunCreatedResponse)
 async def create_run(request: RunRequest) -> RunCreatedResponse:
     run_id = str(uuid4())
-    record = _RunRecord(run_id=run_id, status="running", started_at=_now_utc())
+    record = _RunRecord(run_id=run_id, status="running", started_at=_now_utc(), request=request)
 
     with _RUNS_LOCK:
         _RUNS[run_id] = record
@@ -206,6 +290,37 @@ async def pause_run(run_id: str) -> RunControlResponse:
         if record.status == "running":
             record.pause_requested = True
 
+        return RunControlResponse(run_id=record.run_id, status=record.status)
+
+
+@router.post("/api/run/{run_id}/resume", response_model=RunControlResponse)
+async def resume_run(run_id: str) -> RunControlResponse:
+    with _RUNS_LOCK:
+        record = _RUNS.get(run_id)
+
+        if record is None:
+            raise HTTPException(status_code=404, detail="run_id not found")
+
+        if record.status != "paused":
+            raise HTTPException(status_code=409, detail="run is not paused")
+
+        if record.checkpoint is None:
+            raise HTTPException(status_code=409, detail="run has no checkpoint")
+
+        record.status = "running"
+        record.paused_at = None
+        record.completed_at = None
+        record.error = None
+        record.pause_requested = False
+        record.events = queue.Queue()
+
+    def _runner() -> None:
+        asyncio.run(_resume_run(run_id))
+
+    threading.Thread(target=_runner, name=f"run-resume-{run_id}", daemon=True).start()
+
+    with _RUNS_LOCK:
+        record = _RUNS[run_id]
         return RunControlResponse(run_id=record.run_id, status=record.status)
 
 

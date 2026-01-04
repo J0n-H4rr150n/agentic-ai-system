@@ -25,6 +25,17 @@ class StepTracer:
     _next_step_id: int = 1
     on_record: Callable[[StepTrace], None] | None = None
 
+    @classmethod
+    def from_existing(cls, steps: list[StepTrace], *, on_record: Callable[[StepTrace], None] | None = None) -> "StepTracer":
+        """Create a tracer seeded with existing steps.
+
+        Used to continue step_id numbering deterministically across pause/resume.
+        """
+
+        seeded = list(steps)
+        next_id = len(seeded) + 1
+        return cls(_steps=seeded, _next_step_id=next_id, on_record=on_record)
+
     def record(
         self,
         *,

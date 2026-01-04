@@ -249,3 +249,10 @@ All notable changes to this project will be documented in this file.
 - Added in-memory run checkpoint model and checkpoint retrieval endpoint (`GET /api/run/{id}/checkpoint`)
 - Updated executor to stop at safe batch boundaries and persist a deterministic checkpoint
 - Added backend integration tests for pause/checkpoint behavior
+
+### F00005_S003: Resume Execution from Checkpoint
+
+- Added resume control endpoint (`POST /api/run/{id}/resume`) for paused runs
+- Updated executor to resume from a persisted checkpoint without re-running completed nodes
+- Ensured step tracing continues with monotonically increasing step ids across pause/resume
+- Added backend integration tests for pause → resume → completed

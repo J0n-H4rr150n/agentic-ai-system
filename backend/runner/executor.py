@@ -51,6 +51,7 @@ class AsyncExecutor:
         plan: ExecutionPlan,
         nodes: dict[str, BaseNode],
         state: StateContainer | None = None,
+        checkpoint: ExecutionCheckpoint | None = None,
         tracer: StepTracer | None = None,
         should_pause: Callable[[], bool] | None = None,
     ) -> StateContainer:
@@ -73,12 +74,19 @@ class AsyncExecutor:
         if missing:
             raise ValueError(f"Missing node implementations for: {sorted(missing)}")
 
-        run_state = state or StateContainer()
+        if checkpoint is not None and state is not None:
+            raise ValueError("Provide either state or checkpoint, not both")
 
-        indegree: dict[str, int] = {node_id: len(plan.incoming.get(node_id, [])) for node_id in plan.node_ids}
-        ready = deque([node_id for node_id in plan.node_ids if indegree.get(node_id, 0) == 0])
-
-        completed: set[str] = set()
+        if checkpoint is None:
+            run_state = state or StateContainer()
+            indegree: dict[str, int] = {node_id: len(plan.incoming.get(node_id, [])) for node_id in plan.node_ids}
+            ready = deque([node_id for node_id in plan.node_ids if indegree.get(node_id, 0) == 0])
+            completed: set[str] = set()
+        else:
+            run_state = StateContainer.from_mapping(checkpoint.state)
+            indegree = dict(checkpoint.indegree)
+            ready = deque(list(checkpoint.ready_node_ids))
+            completed = set(checkpoint.completed_node_ids)
 
         while ready:
             batch = sorted(ready)
