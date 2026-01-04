@@ -21,7 +21,7 @@ Implement the essential nodes needed for the security testing MVP workflow:
 - [x] S003: LLM Call Node - Vertex AI Implementation
 - [x] S004: LLM Tracing (tokens, timing, decision capture)
 - [x] S005: Playwright Browser Node - Session Management
-- [ ] S006: Playwright Browser Node - Navigation & Actions
+- [x] S006: Playwright Browser Node - Navigation & Actions
 - [ ] S007: Playwright Browser Node - Observation Modes
 - [ ] S008: HTTP Request Node
 - [ ] S009: Router Node with Conditions
@@ -43,9 +43,9 @@ Implement the essential nodes needed for the security testing MVP workflow:
 ### Browser Node
 - [x] Session created on first browser node in run
 - [x] Session shared across all browser nodes in same run
-- [ ] Navigate to URL action
-- [ ] Click element action (by selector or SoM index)
-- [ ] Type text action
+- [x] Navigate to URL action
+- [x] Click element action (by selector or SoM index)
+- [x] Type text action
 - [ ] Observation modes work:
   - `visual`: screenshot + screenshot_som
   - `source_inspector`: html_cleaned with comments extracted

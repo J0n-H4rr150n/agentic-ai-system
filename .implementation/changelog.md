@@ -166,3 +166,9 @@ All notable changes to this project will be documented in this file.
 
 - Added `BrowserSessionManager` for per-run session reuse
 - Added explicit lifecycle methods (`close`, `close_all`) and unit tests
+
+### F00003_S006: Playwright Browser Node - Navigation & Actions
+
+- Added browser action helpers for navigate/click/type against a page-like protocol
+- Added `BrowserNode` that executes one action using `BrowserSessionManager` (unit-tested with fakes)
+- Added support for click-by-SoM-index via `state['som_index_to_selector']`
