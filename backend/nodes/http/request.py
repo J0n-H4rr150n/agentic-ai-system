@@ -217,3 +217,7 @@ def _parse_response_body(response: httpx.Response) -> Any:
             return text
 
     return text
+
+
+NODE_TYPE = "http_request"
+NODE_CLASS = HTTPRequestNode

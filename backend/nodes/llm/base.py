@@ -142,3 +142,7 @@ class LLMCallNode(BaseNode):
         if not isinstance(value, str) or not value:
             raise ValueError(f"LLMCallNode config.{key} must be a non-empty string")
         return value
+
+
+NODE_TYPE = "llm"
+NODE_CLASS = LLMCallNode

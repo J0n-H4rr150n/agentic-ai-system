@@ -30,6 +30,7 @@ def parse_graph(graph: GraphDefinition, registry: NodeRegistry | None = None) ->
     """
 
     registry = registry or NodeRegistry()
+    registry.discover()
 
     for node in graph.nodes:
         if not registry.is_supported(node.type):

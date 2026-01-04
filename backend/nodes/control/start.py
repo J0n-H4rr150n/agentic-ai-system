@@ -38,3 +38,7 @@ class StartNode(BaseNode):
             raise ValueError("StartNode config.initial_state must be a dict")
 
         return dict(initial_state)
+
+
+NODE_TYPE = "start"
+NODE_CLASS = StartNode

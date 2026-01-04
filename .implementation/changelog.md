@@ -190,3 +190,10 @@ All notable changes to this project will be documented in this file.
 - Added `RouterNode` that selects a route based on state conditions
 - Supports operators: equals, contains, regex, greater_than, less_than with a default fallback
 - Added unit tests for match ordering, dotted-path state lookups, and invalid config validation
+
+### F00003_S010: Node Registry & Auto-Discovery
+
+- Added `NodeRegistry` supporting register/get/list/is_supported and one-time auto-discovery
+- Auto-discovery scans and imports modules under `backend.nodes.*` and registers those exporting `NODE_TYPE`/`NODE_CLASS`
+- Updated graph parsing to validate supported node types via the registry
+- Added unit tests for discovery idempotency and graph parsing validation

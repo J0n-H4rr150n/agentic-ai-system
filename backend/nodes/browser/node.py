@@ -161,3 +161,7 @@ class BrowserNode(BaseNode):
 
 def _result_to_dict(result: BrowserActionResult) -> dict[str, Any]:
     return {"action": result.action, "ok": result.ok, "details": dict(result.details)}
+
+
+NODE_TYPE = "browser"
+NODE_CLASS = BrowserNode

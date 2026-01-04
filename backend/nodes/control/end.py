@@ -43,3 +43,7 @@ class EndNode(BaseNode):
             snapshot = {k: snapshot.get(k) for k in include_keys if k in snapshot}
 
         return {result_key: snapshot}
+
+
+NODE_TYPE = "end"
+NODE_CLASS = EndNode

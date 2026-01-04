@@ -57,6 +57,5 @@ def test_parse_graph_rejects_unknown_node_type() -> None:
         }
     )
 
-    registry = NodeRegistry(allowed_types={"start"})
     with pytest.raises(ValueError, match="Unsupported node type"):
-        parse_graph(graph, registry=registry)
+        parse_graph(graph)

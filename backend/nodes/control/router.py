@@ -55,6 +55,10 @@ class RouterNode(BaseNode):
         }
 
 
+NODE_TYPE = "router"
+NODE_CLASS = RouterNode
+
+
 def select_route(
     *,
     state: dict[str, Any],
