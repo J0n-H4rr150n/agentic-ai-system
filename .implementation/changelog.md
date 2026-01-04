@@ -161,3 +161,8 @@ All notable changes to this project will be documented in this file.
 - Added `LLMTrace` and helper functions for token/timing/decision fields
 - Updated `LLMCallNode` output to include `trace` with elapsed time and usage
 - Added unit tests for trace extraction and JSON decision capture
+
+### F00003_S005: Playwright Browser Node - Session Management
+
+- Added `BrowserSessionManager` for per-run session reuse
+- Added explicit lifecycle methods (`close`, `close_all`) and unit tests
