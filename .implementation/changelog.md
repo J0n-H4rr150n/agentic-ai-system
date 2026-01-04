@@ -229,3 +229,10 @@ All notable changes to this project will be documented in this file.
 - Added a built-in sample workflow loaded on startup: Start → Browser → LLM → Router → End
 - Included default node configs for URL, LLM prompt, and router decision placeholders
 - Added unit tests for sample workflow graph structure
+
+### F00004_S006: End-to-End Test Against Local Lab
+
+- Added backend node factory to instantiate real node implementations from a graph definition
+- Added an HTTP-backed page implementation for browser-node tests (no Playwright dependency)
+- Added a backend E2E test that runs a graph against an in-process local HTTP server
+- Updated default sample workflow target URL and improved trace screenshot extraction for nested outputs

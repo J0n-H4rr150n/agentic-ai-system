@@ -19,6 +19,11 @@ test("getScreenshotBase64FromOutput detects common screenshot keys", () => {
   assert.equal(getScreenshotBase64FromOutput({ screenshot_som: "ghi" }), "ghi");
 });
 
+test("getScreenshotBase64FromOutput detects nested screenshot keys", () => {
+  assert.equal(getScreenshotBase64FromOutput({ browser_output: { screenshot: "abc" } }), "abc");
+  assert.equal(getScreenshotBase64FromOutput({ out: { screenshot_som: "ghi" } }), "ghi");
+});
+
 test("sanitizeForDisplay omits large base64 strings", () => {
   const big = "a".repeat(200);
   const sanitized = sanitizeForDisplay({ screenshot: big, other: 1 });

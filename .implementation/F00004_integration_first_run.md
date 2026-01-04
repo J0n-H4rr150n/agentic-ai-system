@@ -1,6 +1,6 @@
 # F00004: Integration & First Run
 
-**Status:** 🟡 In Progress
+**Status:** 🟢 Complete
 **Phase:** 1 (MVP)
 **Priority:** P0 (Critical)
 **Target:** Today
@@ -16,7 +16,7 @@ Wire everything together: frontend canvas talks to backend runner, add run contr
 - [x] S003: SSE Integration for Real-time Updates
 - [x] S004: Execution Trace Viewer (GitHub Actions style)
 - [x] S005: Build Sample Security Workflow
-- [ ] S006: End-to-End Test Against Local Lab
+- [x] S006: End-to-End Test Against Local Lab
 
 ## Acceptance Criteria
 

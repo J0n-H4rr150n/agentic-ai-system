@@ -11,10 +11,25 @@ export function getScreenshotBase64FromOutput(output) {
     return null;
   }
 
-  for (const key of ["screenshot", "screenshot_base64", "screenshot_som"]) {
+  const keys = ["screenshot", "screenshot_base64", "screenshot_som"];
+
+  for (const key of keys) {
     const screenshot = output[key];
     if (typeof screenshot === "string" && screenshot.length > 0) {
       return screenshot;
+    }
+  }
+
+  // Common case: node output is nested under an output_key (e.g. {browser_output: {...}})
+  for (const value of Object.values(output)) {
+    if (!value || typeof value !== "object") {
+      continue;
+    }
+    for (const key of keys) {
+      const screenshot = value[key];
+      if (typeof screenshot === "string" && screenshot.length > 0) {
+        return screenshot;
+      }
     }
   }
 

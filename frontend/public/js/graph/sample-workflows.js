@@ -18,7 +18,7 @@ export function buildSampleSecurityWorkflowGraph() {
       position: { x: 80, y: 80 },
       config: {
         initial_state: {
-          target_url: "http://localhost:8000",
+          target_url: "http://localhost:47658/",
         },
       },
     },
@@ -52,18 +52,16 @@ export function buildSampleSecurityWorkflowGraph() {
       title: "Router",
       position: { x: 800, y: 80 },
       config: {
-        routes: [
+        output_key: "router_output",
+        default_output: "default",
+        conditions: [
           {
-            id: "route-found",
-            when: {
-              key: "llm_output.json.findings",
-              op: "contains",
-              value: "sql",
-            },
-            next: "sample-end",
+            var: "llm_output.json.findings",
+            op: "contains",
+            value: "sql",
+            output: "found",
           },
         ],
-        default_next: "sample-end",
       },
     },
     {
