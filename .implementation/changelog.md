@@ -242,3 +242,10 @@ All notable changes to this project will be documented in this file.
 - Added `interrupt` configuration to graph node schema with validation (before/after + optional reason)
 - Plumbed interrupt configs into the runner execution plan for later pause/resume stories
 - Added backend unit tests for interrupt validation and plan plumbing
+
+### F00005_S002: Persist Checkpoint + Pause Execution
+
+- Added backend pause control endpoint (`POST /api/run/{id}/pause`) and paused run status
+- Added in-memory run checkpoint model and checkpoint retrieval endpoint (`GET /api/run/{id}/checkpoint`)
+- Updated executor to stop at safe batch boundaries and persist a deterministic checkpoint
+- Added backend integration tests for pause/checkpoint behavior

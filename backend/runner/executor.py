@@ -16,12 +16,30 @@ import asyncio
 import time
 from collections import deque
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Callable
 
 from backend.nodes.base import BaseNode, NodeExecutionError
 from backend.runner.graph_parser import ExecutionPlan
 from backend.runner.state import StateContainer
 from backend.runner.tracer import StepTracer
+
+
+@dataclass(frozen=True, slots=True)
+class ExecutionCheckpoint:
+    """Serializable checkpoint data captured at a safe executor boundary."""
+
+    state: dict[str, Any]
+    completed_node_ids: list[str]
+    ready_node_ids: list[str]
+    indegree: dict[str, int]
+
+
+class RunPaused(Exception):
+    """Raised by the executor when a pause is requested at a safe boundary."""
+
+    def __init__(self, checkpoint: ExecutionCheckpoint) -> None:
+        super().__init__("Run paused")
+        self.checkpoint = checkpoint
 
 
 @dataclass(slots=True)
@@ -34,6 +52,7 @@ class AsyncExecutor:
         nodes: dict[str, BaseNode],
         state: StateContainer | None = None,
         tracer: StepTracer | None = None,
+        should_pause: Callable[[], bool] | None = None,
     ) -> StateContainer:
         """Execute the plan.
 
@@ -127,6 +146,16 @@ class AsyncExecutor:
                     indegree[neighbor] -= 1
                     if indegree[neighbor] == 0:
                         ready.append(neighbor)
+
+            if should_pause is not None and should_pause():
+                raise RunPaused(
+                    ExecutionCheckpoint(
+                        state=run_state.to_dict(),
+                        completed_node_ids=sorted(completed),
+                        ready_node_ids=sorted(ready),
+                        indegree=dict(indegree),
+                    )
+                )
 
             if errors:
                 first = sorted(errors)[0]

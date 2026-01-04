@@ -11,7 +11,7 @@ This feature is the bridge from “runs complete end-to-end” to “runs can be
 
 ## Stories
 - [x] S001: Interrupt point configuration on nodes
-- [ ] S002: Persist checkpoint + pause execution
+- [x] S002: Persist checkpoint + pause execution
 - [ ] S003: Resume execution from checkpoint
 - [ ] S004: Force-stop mechanism (cancel run)
 - [ ] S005: Human-in-the-loop actions: Allow / Edit / Reject
