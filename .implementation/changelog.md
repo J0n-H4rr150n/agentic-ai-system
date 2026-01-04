@@ -178,3 +178,9 @@ All notable changes to this project will be documented in this file.
 - Added observation builder with modes: `visual`, `source_inspector`, `traffic_analyst`, `full`
 - Browser node can optionally include screenshot/HTML/network data in its output via `config.observation_mode`
 - Added unit tests using fakes (no real Playwright required)
+
+### F00003_S008: HTTP Request Node
+
+- Added `HTTPRequestNode` using `httpx.AsyncClient` with configurable method/url/headers/body
+- Supports JSON body or form body (mutually exclusive) and captures response status/headers/body
+- Added unit tests using `httpx.MockTransport` (no network)

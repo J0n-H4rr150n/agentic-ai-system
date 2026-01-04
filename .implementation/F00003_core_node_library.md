@@ -23,7 +23,7 @@ Implement the essential nodes needed for the security testing MVP workflow:
 - [x] S005: Playwright Browser Node - Session Management
 - [x] S006: Playwright Browser Node - Navigation & Actions
 - [x] S007: Playwright Browser Node - Observation Modes
-- [ ] S008: HTTP Request Node
+- [x] S008: HTTP Request Node
 - [ ] S009: Router Node with Conditions
 - [ ] S010: Node Registry & Auto-Discovery
 
@@ -53,10 +53,10 @@ Implement the essential nodes needed for the security testing MVP workflow:
   - `full`: everything
 
 ### HTTP Request Node
-- [ ] Supports GET, POST, PUT, DELETE, PATCH
-- [ ] Custom headers
-- [ ] JSON/form body
-- [ ] Response captured: status, headers, body
+- [x] Supports GET, POST, PUT, DELETE, PATCH
+- [x] Custom headers
+- [x] JSON/form body
+- [x] Response captured: status, headers, body
 
 ### Router Node
 - [ ] Multiple output ports based on conditions
