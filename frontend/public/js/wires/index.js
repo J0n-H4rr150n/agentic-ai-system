@@ -7,6 +7,10 @@ export class WireManager {
     this._wires = [];
   }
 
+  clear() {
+    this._wires = [];
+  }
+
   getWires() {
     return this._wires;
   }

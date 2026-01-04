@@ -15,7 +15,7 @@ Wire everything together: frontend canvas talks to backend runner, add run contr
 - [x] S002: Run Controls UI (Run button, status indicator)
 - [x] S003: SSE Integration for Real-time Updates
 - [x] S004: Execution Trace Viewer (GitHub Actions style)
-- [ ] S005: Build Sample Security Workflow
+- [x] S005: Build Sample Security Workflow
 - [ ] S006: End-to-End Test Against Local Lab
 
 ## Acceptance Criteria

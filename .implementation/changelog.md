@@ -223,3 +223,9 @@ All notable changes to this project will be documented in this file.
 - Wired SSE `step` events to append collapsible step rows with input/output/error
 - Added screenshot preview support for base64 screenshot fields
 - Added unit tests for trace formatting and sanitization
+
+### F00004_S005: Build Sample Security Workflow
+
+- Added a built-in sample workflow loaded on startup: Start → Browser → LLM → Router → End
+- Included default node configs for URL, LLM prompt, and router decision placeholders
+- Added unit tests for sample workflow graph structure

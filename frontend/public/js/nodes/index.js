@@ -7,6 +7,10 @@ export class NodeManager {
     this._nodes = [];
   }
 
+  clear() {
+    this._nodes = [];
+  }
+
   add(node) {
     this._nodes.push(node);
   }

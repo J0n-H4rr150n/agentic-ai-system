@@ -5,6 +5,7 @@ import { NodeManager } from "../nodes/index.js";
 import { SelectionManager } from "../selection/index.js";
 import { WireManager } from "../wires/index.js";
 import { WireInteractionManager } from "../wires/interaction.js";
+import { loadSampleSecurityWorkflow } from "../graph/sample-workflows.js";
 
 export class CanvasManager {
   constructor({ canvas, host }) {
@@ -21,8 +22,10 @@ export class CanvasManager {
     this.ctx = ctx;
 
     this.viewport = createViewport();
-    this.nodeManager = NodeManager.createWithDemoNode();
+    this.nodeManager = new NodeManager();
     this.wireManager = new WireManager();
+
+    loadSampleSecurityWorkflow({ nodeManager: this.nodeManager, wireManager: this.wireManager });
 
     this.wireInteraction = new WireInteractionManager({
       canvas,
