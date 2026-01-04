@@ -142,3 +142,9 @@ All notable changes to this project will be documented in this file.
 - End node returns a final state snapshot under a configurable `result_key`
 - Wired run execution to instantiate Start/End nodes by type
 - Added unit tests for Start/End node behavior
+
+### F00003_S002: LLM Call Node - Base Interface
+
+- Added provider-agnostic `LLMClient` protocol and normalized `LLMResponse` models
+- Added `LLMCallNode` that sources prompt from config or state and supports JSON mode
+- Added unit tests for prompt sourcing, JSON parsing, and validation
