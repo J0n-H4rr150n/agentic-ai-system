@@ -14,7 +14,7 @@ This feature is the bridge from “runs complete end-to-end” to “runs can be
 - [x] S002: Persist checkpoint + pause execution
 - [x] S003: Resume execution from checkpoint
 - [x] S004: Force-stop mechanism (cancel run)
-- [ ] S005: Human-in-the-loop actions: Allow / Edit / Reject
+- [x] S005: Human-in-the-loop actions: Allow / Edit / Reject
 - [ ] S006: Runtime control channel (WebSocket) for 2-way control
 
 ## Acceptance Criteria

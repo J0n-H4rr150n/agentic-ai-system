@@ -37,3 +37,4 @@ class RunCheckpoint(BaseModel):
     completed_node_ids: list[str]
     ready_node_ids: list[str]
     indegree: dict[str, int]
+    handled_interrupts: list[str] = Field(default_factory=list)

@@ -262,3 +262,12 @@ All notable changes to this project will be documented in this file.
 - Added cancel control endpoint (`POST /api/run/{id}/cancel`) and terminal `cancelled` run status
 - Updated executor to honor cancel requests at safe batch boundaries (no partial batch cancellation)
 - Added backend integration tests for cancelling running runs and cancelling paused runs
+
+### F00005_S005: Human-in-the-loop Actions (Allow / Edit / Reject)
+
+- Updated executor to pause automatically on node interrupt points (`interrupt.before`/`interrupt.after`)
+- Added run metadata for pending interrupts and pause reason, plus HITL endpoints:
+  - `POST /api/run/{id}/hitl/allow`
+  - `POST /api/run/{id}/hitl/edit` (shallow state patch)
+  - `POST /api/run/{id}/hitl/reject`
+- Added backend integration tests for HITL pause → allow/edit/reject flows

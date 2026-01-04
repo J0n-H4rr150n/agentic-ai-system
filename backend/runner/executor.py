@@ -15,8 +15,8 @@ from __future__ import annotations
 import asyncio
 import time
 from collections import deque
-from dataclasses import dataclass
-from typing import Any, Callable
+from dataclasses import dataclass, field
+from typing import Any, Callable, Literal
 
 from backend.nodes.base import BaseNode, NodeExecutionError
 from backend.runner.graph_parser import ExecutionPlan
@@ -32,6 +32,7 @@ class ExecutionCheckpoint:
     completed_node_ids: list[str]
     ready_node_ids: list[str]
     indegree: dict[str, int]
+    handled_interrupts: list[str] = field(default_factory=list)
 
 
 class RunPaused(Exception):
@@ -48,6 +49,22 @@ class RunCancelled(Exception):
     def __init__(self, checkpoint: ExecutionCheckpoint) -> None:
         super().__init__("Run cancelled")
         self.checkpoint = checkpoint
+
+
+@dataclass(frozen=True, slots=True)
+class InterruptContext:
+    node_id: str
+    phase: Literal["before", "after"]
+    reason: str | None = None
+
+
+class RunInterrupted(Exception):
+    """Raised by the executor when it reaches an interrupt point."""
+
+    def __init__(self, checkpoint: ExecutionCheckpoint, interrupt: InterruptContext) -> None:
+        super().__init__("Run interrupted")
+        self.checkpoint = checkpoint
+        self.interrupt = interrupt
 
 
 @dataclass(slots=True)
@@ -91,15 +108,38 @@ class AsyncExecutor:
             indegree: dict[str, int] = {node_id: len(plan.incoming.get(node_id, [])) for node_id in plan.node_ids}
             ready = deque([node_id for node_id in plan.node_ids if indegree.get(node_id, 0) == 0])
             completed: set[str] = set()
+            handled_interrupts: set[str] = set()
         else:
             run_state = StateContainer.from_mapping(checkpoint.state)
             indegree = dict(checkpoint.indegree)
             ready = deque(list(checkpoint.ready_node_ids))
             completed = set(checkpoint.completed_node_ids)
+            handled_interrupts = set(checkpoint.handled_interrupts or [])
 
         while ready:
             batch = sorted(ready)
             ready.clear()
+
+            # Interrupt before executing nodes.
+            for node_id in batch:
+                cfg = plan.interrupts.get(node_id)
+                if cfg is None or not cfg.before:
+                    continue
+
+                key = f"before:{node_id}"
+                if key in handled_interrupts:
+                    continue
+
+                raise RunInterrupted(
+                    ExecutionCheckpoint(
+                        state=run_state.to_dict(),
+                        completed_node_ids=sorted(completed),
+                        ready_node_ids=sorted(batch),
+                        indegree=dict(indegree),
+                        handled_interrupts=sorted(handled_interrupts),
+                    ),
+                    InterruptContext(node_id=node_id, phase="before", reason=cfg.reason),
+                )
 
             batch_input = run_state.to_dict()
             start_times = {node_id: time.perf_counter() for node_id in batch}
@@ -164,6 +204,27 @@ class AsyncExecutor:
                     if indegree[neighbor] == 0:
                         ready.append(neighbor)
 
+            # Interrupt after executing nodes.
+            for node_id in sorted(results):
+                cfg = plan.interrupts.get(node_id)
+                if cfg is None or not cfg.after:
+                    continue
+
+                key = f"after:{node_id}"
+                if key in handled_interrupts:
+                    continue
+
+                raise RunInterrupted(
+                    ExecutionCheckpoint(
+                        state=run_state.to_dict(),
+                        completed_node_ids=sorted(completed),
+                        ready_node_ids=sorted(ready),
+                        indegree=dict(indegree),
+                        handled_interrupts=sorted(handled_interrupts),
+                    ),
+                    InterruptContext(node_id=node_id, phase="after", reason=cfg.reason),
+                )
+
             if should_cancel is not None and should_cancel():
                 raise RunCancelled(
                     ExecutionCheckpoint(
@@ -171,6 +232,7 @@ class AsyncExecutor:
                         completed_node_ids=sorted(completed),
                         ready_node_ids=sorted(ready),
                         indegree=dict(indegree),
+                        handled_interrupts=sorted(handled_interrupts),
                     )
                 )
 
@@ -181,6 +243,7 @@ class AsyncExecutor:
                         completed_node_ids=sorted(completed),
                         ready_node_ids=sorted(ready),
                         indegree=dict(indegree),
+                        handled_interrupts=sorted(handled_interrupts),
                     )
                 )
 
