@@ -197,3 +197,10 @@ All notable changes to this project will be documented in this file.
 - Auto-discovery scans and imports modules under `backend.nodes.*` and registers those exporting `NODE_TYPE`/`NODE_CLASS`
 - Updated graph parsing to validate supported node types via the registry
 - Added unit tests for discovery idempotency and graph parsing validation
+
+### F00004_S001: API Client Module (Frontend)
+
+- Added `frontend/public/js/api/client.js` fetch wrapper with JSON handling and typed errors
+- Added `frontend/public/js/api/run.js` with helpers for `/api/run` (start/status) and opening `/api/run/{id}/stream`
+- Added a minimal same-origin `/api/*` proxy in the frontend Express server (uses `BACKEND_URL`)
+- Added unit tests for API modules (`node --test`)

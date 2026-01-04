@@ -1,6 +1,6 @@
 # F00004: Integration & First Run
 
-**Status:** 🔵 Planned
+**Status:** 🟡 In Progress
 **Phase:** 1 (MVP)
 **Priority:** P0 (Critical)
 **Target:** Today
@@ -11,7 +11,7 @@ Wire everything together: frontend canvas talks to backend runner, add run contr
 
 ## Stories
 
-- [ ] S001: API Client Module (Frontend)
+- [x] S001: API Client Module (Frontend)
 - [ ] S002: Run Controls UI (Run button, status indicator)
 - [ ] S003: SSE Integration for Real-time Updates
 - [ ] S004: Execution Trace Viewer (GitHub Actions style)
@@ -131,5 +131,5 @@ frontend/
 The MVP is successful when:
 
 1. ✅ User can visually build a multi-agent workflow on canvas
-2. ✅ User can run the workflow against a local lab target  
+2. ✅ User can run the workflow against a local lab target
 3. ✅ User can view execution results and iterate
