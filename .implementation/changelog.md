@@ -172,3 +172,9 @@ All notable changes to this project will be documented in this file.
 - Added browser action helpers for navigate/click/type against a page-like protocol
 - Added `BrowserNode` that executes one action using `BrowserSessionManager` (unit-tested with fakes)
 - Added support for click-by-SoM-index via `state['som_index_to_selector']`
+
+### F00003_S007: Playwright Browser Node - Observation Modes
+
+- Added observation builder with modes: `visual`, `source_inspector`, `traffic_analyst`, `full`
+- Browser node can optionally include screenshot/HTML/network data in its output via `config.observation_mode`
+- Added unit tests using fakes (no real Playwright required)

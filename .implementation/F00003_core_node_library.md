@@ -22,7 +22,7 @@ Implement the essential nodes needed for the security testing MVP workflow:
 - [x] S004: LLM Tracing (tokens, timing, decision capture)
 - [x] S005: Playwright Browser Node - Session Management
 - [x] S006: Playwright Browser Node - Navigation & Actions
-- [ ] S007: Playwright Browser Node - Observation Modes
+- [x] S007: Playwright Browser Node - Observation Modes
 - [ ] S008: HTTP Request Node
 - [ ] S009: Router Node with Conditions
 - [ ] S010: Node Registry & Auto-Discovery
@@ -46,7 +46,7 @@ Implement the essential nodes needed for the security testing MVP workflow:
 - [x] Navigate to URL action
 - [x] Click element action (by selector or SoM index)
 - [x] Type text action
-- [ ] Observation modes work:
+- [x] Observation modes work:
   - `visual`: screenshot + screenshot_som
   - `source_inspector`: html_cleaned with comments extracted
   - `traffic_analyst`: network_log array
