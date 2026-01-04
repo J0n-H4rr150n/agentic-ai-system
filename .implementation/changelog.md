@@ -128,3 +128,9 @@ All notable changes to this project will be documented in this file.
 - Added `POST /api/run` and `GET /api/run/{id}` endpoints backed by an in-memory run store
 - Runs execute in the background via asyncio tasks and return step traces on GET
 - Added unit tests for run endpoint behavior
+
+### F00002_S010: SSE Streaming for Real-time Updates
+
+- Added `GET /api/run/{id}/stream` SSE endpoint for step updates
+- Stream emits step events as nodes complete and a terminal status event
+- Added unit test validating streaming behavior

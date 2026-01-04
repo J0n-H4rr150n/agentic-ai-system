@@ -12,7 +12,7 @@ Tracing is designed to be:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Callable
 
 from backend.models.run import StepTrace
 
@@ -23,6 +23,7 @@ class StepTracer:
 
     _steps: list[StepTrace] = field(default_factory=list)
     _next_step_id: int = 1
+    on_record: Callable[[StepTrace], None] | None = None
 
     def record(
         self,
@@ -44,6 +45,8 @@ class StepTracer:
             error=error,
         )
         self._steps.append(step)
+        if self.on_record is not None:
+            self.on_record(step)
         self._next_step_id += 1
 
     def steps(self) -> list[StepTrace]:
