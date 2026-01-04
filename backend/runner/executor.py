@@ -13,6 +13,7 @@ Tracing and streaming are handled in later stories.
 from __future__ import annotations
 
 import asyncio
+import time
 from collections import deque
 from dataclasses import dataclass
 from typing import Any
@@ -20,13 +21,20 @@ from typing import Any
 from backend.nodes.base import BaseNode, NodeExecutionError
 from backend.runner.graph_parser import ExecutionPlan
 from backend.runner.state import StateContainer
+from backend.runner.tracer import StepTracer
 
 
 @dataclass(slots=True)
 class AsyncExecutor:
     """Executes a graph plan using asyncio for parallel-ready nodes."""
 
-    async def run(self, plan: ExecutionPlan, nodes: dict[str, BaseNode], state: StateContainer | None = None) -> StateContainer:
+    async def run(
+        self,
+        plan: ExecutionPlan,
+        nodes: dict[str, BaseNode],
+        state: StateContainer | None = None,
+        tracer: StepTracer | None = None,
+    ) -> StateContainer:
         """Execute the plan.
 
         Args:
@@ -57,21 +65,58 @@ class AsyncExecutor:
             batch = sorted(ready)
             ready.clear()
 
-            tasks = {node_id: asyncio.create_task(nodes[node_id].execute(run_state.to_dict())) for node_id in batch}
+            batch_input = run_state.to_dict()
+            start_times = {node_id: time.perf_counter() for node_id in batch}
+            tasks = [asyncio.create_task(nodes[node_id].execute(dict(batch_input))) for node_id in batch]
+            raw_results = await asyncio.gather(*tasks, return_exceptions=True)
 
             results: dict[str, dict[str, Any]] = {}
-            for node_id, task in tasks.items():
-                try:
-                    result = await task
-                except NodeExecutionError:
-                    raise
-                except Exception as exc:  # noqa: BLE001
-                    raise NodeExecutionError(node_id=node_id, message=str(exc)) from exc
+            errors: dict[str, NodeExecutionError] = {}
 
-                if not isinstance(result, dict):
-                    raise NodeExecutionError(node_id=node_id, message="Node output must be a dict")
+            for node_id, raw in zip(batch, raw_results, strict=True):
+                duration_ms = int(round((time.perf_counter() - start_times[node_id]) * 1000))
 
-                results[node_id] = result
+                if isinstance(raw, Exception):
+                    if isinstance(raw, NodeExecutionError):
+                        err = raw
+                    else:
+                        err = NodeExecutionError(node_id=node_id, message=str(raw))
+                    errors[node_id] = err
+                    if tracer is not None:
+                        tracer.record(
+                            node_id=node_id,
+                            input=batch_input,
+                            output=None,
+                            duration_ms=duration_ms,
+                            status="error",
+                            error=str(err),
+                        )
+                    continue
+
+                if not isinstance(raw, dict):
+                    err = NodeExecutionError(node_id=node_id, message="Node output must be a dict")
+                    errors[node_id] = err
+                    if tracer is not None:
+                        tracer.record(
+                            node_id=node_id,
+                            input=batch_input,
+                            output=None,
+                            duration_ms=duration_ms,
+                            status="error",
+                            error=str(err),
+                        )
+                    continue
+
+                results[node_id] = raw
+                if tracer is not None:
+                    tracer.record(
+                        node_id=node_id,
+                        input=batch_input,
+                        output=raw,
+                        duration_ms=duration_ms,
+                        status="ok",
+                        error=None,
+                    )
 
             # Deterministic application of results independent of task completion order.
             for node_id in sorted(results):
@@ -82,6 +127,10 @@ class AsyncExecutor:
                     indegree[neighbor] -= 1
                     if indegree[neighbor] == 0:
                         ready.append(neighbor)
+
+            if errors:
+                first = sorted(errors)[0]
+                raise errors[first]
 
         if len(completed) != len(plan.node_ids):
             raise ValueError("Execution did not complete all nodes (cycle or missing edges)")
