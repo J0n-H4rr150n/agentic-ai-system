@@ -292,3 +292,12 @@ All notable changes to this project will be documented in this file.
 - Added a minimal toolbar action “Save as Node” that POSTs the serialized graph to `POST /api/workflow`
 - Added workflow status display in the toolbar showing returned `workflow_id`
 - Added frontend unit tests covering the workflow API client and save-as-node controller
+
+### F00006_S003: Version History for Saved Agent Nodes
+
+- Versioned workflow storage in-memory (workflow id now has versions starting at 1)
+- Added workflow version endpoints:
+  - `POST /api/workflow/{workflow_id}/version` creates a new version
+  - `GET /api/workflow/{workflow_id}/versions` lists version history
+- Updated `GET /api/workflow/{workflow_id}` to support `?version=` (defaults to latest)
+- Added backend tests covering version create/list/get behaviors

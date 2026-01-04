@@ -12,7 +12,7 @@ This enables composition: complex agents are built from smaller agents.
 ## Stories
 - [x] S001: Persist workflows (save/load) in backend
 - [x] S002: “Save as Node” action (frontend)
-- [ ] S003: Version history for saved agent nodes
+- [x] S003: Version history for saved agent nodes
 - [ ] S004: Palette integration for saved agents
 - [ ] S005: Nested execution (agent-within-agent)
 - [ ] S006: Infer input/output schema from saved graphs
