@@ -1,0 +1,19 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "36300:36300"
+    environment:
+      - PORT=36300
+      - BACKEND_URL=http://backend:36301
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "36301:36301"
+    environment:
+      - PORT=36301

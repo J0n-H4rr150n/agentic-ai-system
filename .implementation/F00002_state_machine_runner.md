@@ -1,6 +1,6 @@
 # F00002: State Machine Runner
 
-**Status:** 🔵 Planned
+**Status:** 🟡 In Progress
 **Phase:** 1 (MVP)
 **Priority:** P0 (Critical)
 **Target:** Today
@@ -11,9 +11,9 @@ Build the Python FastAPI backend that accepts a graph JSON payload and executes 
 
 ## Stories
 
-- [ ] S001: FastAPI Project Setup & Docker
-- [ ] S002: Pydantic Models for Graph Schema
-- [ ] S003: Graph Parser (JSON → Execution Plan)
+- [x] S001: FastAPI Project Setup & Docker
+- [x] S002: Pydantic Models for Graph Schema
+- [x] S003: Graph Parser (JSON → Execution Plan)
 - [ ] S004: Dependency Resolver (Topological Sort)
 - [ ] S005: Base Node Executor Interface
 - [ ] S006: State Container Class

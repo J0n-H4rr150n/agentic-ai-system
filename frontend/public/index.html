@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Visual Agent IDE</title>
+    <link rel="stylesheet" href="/css/base.css" />
+    <link rel="stylesheet" href="/css/layout.css" />
+    <link rel="stylesheet" href="/css/canvas.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="palette" aria-label="Palette">
+        <h1 class="app-title">Visual Agent IDE</h1>
+        <p class="muted">Canvas grid scaffold</p>
+
+        <button class="palette-item" id="exportJsonButton" type="button">Export JSON</button>
+
+        <div class="palette-root" id="paletteRoot"></div>
+      </aside>
+
+      <main class="workspace" aria-label="Workspace">
+        <div class="canvas-host" id="canvasHost">
+          <canvas id="agentCanvas"></canvas>
+        </div>
+      </main>
+    </div>
+
+    <script type="module" src="/js/main.js"></script>
+  </body>
+</html>

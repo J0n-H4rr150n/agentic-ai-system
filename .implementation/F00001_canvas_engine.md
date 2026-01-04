@@ -1,6 +1,6 @@
 # F00001: Canvas Engine Foundation
 
-**Status:** 🔵 Planned
+**Status:** 🟢 Complete
 **Phase:** 1 (MVP)
 **Priority:** P0 (Critical)
 **Target:** Today
@@ -11,33 +11,33 @@ Build the core visual canvas where users can drag nodes from a palette, place th
 
 ## Stories
 
-- [ ] S001: Project Setup & Docker Infrastructure
-- [ ] S002: Node.js Express Server
-- [ ] S003: HTML5 Canvas with Grid
-- [ ] S004: Pan and Zoom Controls
-- [ ] S005: Base Node Class & Rendering
-- [ ] S006: Node Palette Component
-- [ ] S007: Drag-Drop from Palette to Canvas
-- [ ] S008: Node Selection & Movement
-- [ ] S009: Port System (Input/Output)
-- [ ] S010: Bezier Curve Wiring
-- [ ] S011: Graph Serialization to JSON
+- [x] S001: Project Setup & Docker Infrastructure
+- [x] S002: Node.js Express Server
+- [x] S003: HTML5 Canvas with Grid
+- [x] S004: Pan and Zoom Controls
+- [x] S005: Base Node Class & Rendering
+- [x] S006: Node Palette Component
+- [x] S007: Drag-Drop from Palette to Canvas
+- [x] S008: Node Selection & Movement
+- [x] S009: Port System (Input/Output)
+- [x] S010: Bezier Curve Wiring
+- [x] S011: Graph Serialization to JSON
 
 ## Acceptance Criteria
 
-- [ ] `docker compose up` starts frontend (Node.js) and backend (FastAPI)
-- [ ] Canvas renders with grid background (10px cells)
-- [ ] Pan with middle-mouse or space+drag
-- [ ] Zoom with scroll wheel, clamped 25%-400%
-- [ ] Node palette on left side with categorized node types
-- [ ] Nodes can be dragged from palette onto canvas
-- [ ] Nodes snap to grid when placed
-- [ ] Nodes can be selected (click) and moved (drag)
-- [ ] Nodes have input/output ports
-- [ ] Ports can be wired together by click-drag
-- [ ] Wires render as smooth bezier curves
-- [ ] "Export JSON" produces valid graph structure
-- [ ] JSON includes: nodes, edges, positions, configs
+- [x] `docker compose up` starts frontend (Node.js) and backend (FastAPI)
+- [x] Canvas renders with grid background (10px cells)
+- [x] Pan with middle-mouse or space+drag
+- [x] Zoom with scroll wheel, clamped 25%-400%
+- [x] Node palette on left side with categorized node types
+- [x] Nodes can be dragged from palette onto canvas
+- [x] Nodes snap to grid when placed
+- [x] Nodes can be selected (click) and moved (drag)
+- [x] Nodes have input/output ports
+- [x] Ports can be wired together by click-drag
+- [x] Wires render as smooth bezier curves
+- [x] "Export JSON" produces valid graph structure
+- [x] JSON includes: nodes, edges, positions, configs
 
 ## Technical Notes
 

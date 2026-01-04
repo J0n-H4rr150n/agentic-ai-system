@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "visual-agent-ide-backend"
+version = "0.1.0"
+description = "FastAPI backend for the Visual Agent IDE"
+authors = ["Visual Agent IDE"]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = ">=3.11,<4.0"
+fastapi = "0.115.6"
+uvicorn = { version = "0.30.6", extras = ["standard"] }
+pydantic = "2.10.4"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "8.3.4"
+httpx = "0.28.1"
+
+[build-system]
+requires = ["poetry-core>=1.9.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+# Ensure `import main` works when running tests from within the backend folder.
+pythonpath = ["."]

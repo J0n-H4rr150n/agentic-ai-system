@@ -34,10 +34,15 @@ All AI agents (and humans) must follow this consistent process when implementing
 
 .implementation/
   └── changelog.md         # Running log of all completed work
-  └── F00001_feature.md    # Feature spec (epic-level)
-  └── F00001_S001_story.md # Story within a feature
-  └── F00001_S002_story.md
-  └── F00002_feature.md    # Next feature
+  └── BUGFIXES/             # Bugfix notes (non-story work)
+  │   └── BUGFIX_{slug}.md
+  └── F00001_canvas_engine.md         # Feature spec (epic-level)
+  └── F00001_canvas_engine/           # Stories for this feature
+  │   └── F00001_S001_{slug}.md
+  │   └── F00001_S002_{slug}.md
+  └── F00002_state_machine_runner.md  # Next feature
+  └── F00002_state_machine_runner/    # Stories for this feature
+  │   └── F00002_S001_{slug}.md
   └── ...
 ```
 
@@ -47,6 +52,11 @@ All AI agents (and humans) must follow this consistent process when implementing
 |------|---------|---------|
 | Feature | `F{XXXXX}_{slug}.md` | `F00001_canvas_engine.md` |
 | Story | `F{XXXXX}_S{XXX}_{slug}.md` | `F00001_S001_drag_drop_nodes.md` |
+
+**Location rules:**
+- Feature docs live at `.implementation/F{XXXXX}_{slug}.md`
+- Story docs live under the feature folder: `.implementation/F{XXXXX}_{slug}/F{XXXXX}_S{XXX}_{slug}.md`
+- Bugfix docs live under `.implementation/BUGFIXES/`
 
 ### Feature Document Template
 
@@ -133,7 +143,7 @@ Any issues encountered.
 1. **Before starting work:**
    - Check `plan.md` for current phase priorities
    - Find or create the Feature doc (`F{XXXXX}_{slug}.md`)
-   - Find or create the Story doc (`F{XXXXX}_S{XXX}_{slug}.md`)
+  - Find or create the Story doc (`F{XXXXX}_S{XXX}_{slug}.md`) in the corresponding feature folder
    - Update Story status to 🟡 In Progress
 
 2. **During work:**
@@ -146,6 +156,33 @@ Any issues encountered.
    - Add entry to `changelog.md`
    - Update Feature doc's story checklist
    - If Feature complete, update Feature status to 🟢 Complete
+
+---
+
+## Local Dev Conventions
+
+### Port Range Policy
+
+To avoid conflicts with system ports and other local services, **all runtime ports used by this repo must be in the range `36300–36399`**.
+
+Current allocations:
+- Frontend (Express): `36300`
+- Backend (FastAPI): `36301`
+
+### Makefile Commands
+
+This repo uses a root `Makefile` to standardize common dev commands.
+
+- `make run` → `docker compose down` then `docker compose up --build -d`
+- `make down` → stop containers
+- `make logs` → tail container logs
+
+### Python Dependency Management (Poetry vs Docker)
+
+- **Local development/testing:** use **Poetry** in the `backend/` folder.
+  - Example: `cd backend && poetry install && poetry run pytest`
+- **Docker images:** install dependencies via **pip** using `backend/requirements.txt`.
+  - This keeps container builds simple and predictable.
 
 ### Code Organization Principles
 

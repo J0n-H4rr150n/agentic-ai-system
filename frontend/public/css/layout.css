@@ -1,0 +1,67 @@
+.app-shell {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  height: 100vh;
+}
+
+.palette {
+  border-right: 1px solid #e5e7eb;
+  padding: 12px;
+}
+
+.palette-root {
+  margin-top: 12px;
+}
+
+.palette-section {
+  margin-bottom: 14px;
+}
+
+.palette-section-title {
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0 0 8px;
+  color: #111827;
+}
+
+.palette-items {
+  display: grid;
+  gap: 8px;
+}
+
+.palette-item {
+  text-align: left;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #111827;
+  cursor: pointer;
+}
+
+.palette-item:hover {
+  border-color: #cbd5e1;
+}
+
+.drag-ghost {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  padding: 8px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #111827;
+  font-size: 12px;
+}
+
+.workspace {
+  min-width: 0;
+}
+
+.canvas-host {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}

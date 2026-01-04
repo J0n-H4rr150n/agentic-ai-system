@@ -117,7 +117,7 @@ frontend/
 ### Manual Verification
 
 1. Start the system: `docker compose up`
-2. Open browser to `http://localhost:3000`
+2. Open browser to `http://localhost:36300`
 3. Drag nodes onto canvas: Start → Browser → LLM → End
 4. Configure Browser node with lab URL
 5. Wire the nodes together
