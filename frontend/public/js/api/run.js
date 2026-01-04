@@ -6,14 +6,17 @@ import { createApiClient } from "./client.js";
 export function createRunApi(options = {}) {
   const client = options.client ?? createApiClient({ baseUrl: options.baseUrl ?? "/api", fetchImpl: options.fetchImpl });
 
-  async function startRun({ graph, mode = "run", signal } = {}) {
+  async function startRun({ graph, mode = "run", workflowId = null, signal } = {}) {
     if (!graph || typeof graph !== "object") {
       throw new Error("graph must be an object");
+    }
+    if (workflowId !== null && (typeof workflowId !== "string" || !workflowId)) {
+      throw new Error("workflowId must be a non-empty string when provided");
     }
 
     return client.requestJson("/run", {
       method: "POST",
-      json: { graph, mode },
+      json: { graph, mode, workflow_id: workflowId },
       signal,
     });
   }

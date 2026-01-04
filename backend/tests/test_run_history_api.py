@@ -72,3 +72,39 @@ def test_run_history_records_terminal_run() -> None:
     assert detail_json["run_id"] == run_id
     assert detail_json["status"] == "completed"
     assert isinstance(detail_json.get("trace"), list)
+
+
+def test_run_history_list_can_filter_by_workflow_id() -> None:
+    RUN_HISTORY_STORE.clear()
+    client = TestClient(create_app())
+
+    w1 = client.post("/api/workflow", json={"graph": _simple_graph()})
+    assert w1.status_code == 200
+    workflow_id_1 = w1.json()["workflow_id"]
+
+    w2 = client.post("/api/workflow", json={"graph": _simple_graph()})
+    assert w2.status_code == 200
+    workflow_id_2 = w2.json()["workflow_id"]
+
+    r1 = client.post("/api/run", json={"graph": _simple_graph(), "mode": "run", "workflow_id": workflow_id_1})
+    assert r1.status_code == 200
+    run_id_1 = r1.json()["run_id"]
+
+    r2 = client.post("/api/run", json={"graph": _simple_graph(), "mode": "run", "workflow_id": workflow_id_2})
+    assert r2.status_code == 200
+    run_id_2 = r2.json()["run_id"]
+
+    _wait_until(lambda: client.get(f"/api/run/{run_id_1}").json()["status"] != "running")
+    _wait_until(lambda: client.get(f"/api/run/{run_id_2}").json()["status"] != "running")
+
+    filtered_1 = client.get(f"/api/runs?workflow_id={workflow_id_1}")
+    assert filtered_1.status_code == 200
+    runs_1 = filtered_1.json()["runs"]
+    assert any(r["run_id"] == run_id_1 for r in runs_1)
+    assert all(r.get("workflow_id") == workflow_id_1 for r in runs_1)
+
+    filtered_2 = client.get(f"/api/runs?workflow_id={workflow_id_2}")
+    assert filtered_2.status_code == 200
+    runs_2 = filtered_2.json()["runs"]
+    assert any(r["run_id"] == run_id_2 for r in runs_2)
+    assert all(r.get("workflow_id") == workflow_id_2 for r in runs_2)

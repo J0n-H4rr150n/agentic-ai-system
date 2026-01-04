@@ -9,7 +9,7 @@ Add persistence and UI to browse past runs and debug executions beyond the live 
 
 ## Stories
 - [x] S001: Persist run metadata + step traces
-- [ ] S002: Run list view (per workflow)
+- [x] S002: Run list view (per workflow)
 - [ ] S003: Run detail view (tree/steps, inputs/outputs, screenshots)
 - [ ] S004: Replay from checkpoint (time-travel)
 - [ ] S005: Filter/search by status and node type

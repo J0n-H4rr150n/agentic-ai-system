@@ -9,6 +9,7 @@ test("formatRunStatusText renders idle/running/completed/failed", () => {
   assert.equal(formatRunStatusText({ status: RUN_STATUSES.RUNNING }), "Status: running");
   assert.equal(formatRunStatusText({ status: RUN_STATUSES.RUNNING, runId: "r1" }), "Status: running (r1)");
   assert.equal(formatRunStatusText({ status: RUN_STATUSES.COMPLETED, runId: "r1" }), "Status: completed (r1)");
+  assert.equal(formatRunStatusText({ status: RUN_STATUSES.CANCELLED, runId: "r1" }), "Status: cancelled (r1)");
   assert.equal(
     formatRunStatusText({ status: RUN_STATUSES.FAILED, runId: "r1", error: "boom" }),
     "Status: failed (r1) - boom",
@@ -18,8 +19,11 @@ test("formatRunStatusText renders idle/running/completed/failed", () => {
 test("createRunController runOnce starts run and polls until not running", async () => {
   const statuses = [];
 
+  let seenWorkflowId = null;
+
   const runApi = {
-    async startRun() {
+    async startRun({ workflowId }) {
+      seenWorkflowId = workflowId ?? null;
       return { run_id: "r1", status: "running" };
     },
     calls: 0,
@@ -36,12 +40,15 @@ test("createRunController runOnce starts run and polls until not running", async
   const controller = createRunController({
     runApi,
     getGraph: () => ({ version: 1, nodes: [], edges: [] }),
+    getWorkflowId: () => "w1",
     onStatus: (status, details) => statuses.push({ status, details }),
     pollIntervalMs: 1,
     sleepImpl: async () => {},
   });
 
   await controller.runOnce();
+
+  assert.equal(seenWorkflowId, "w1");
 
   assert.equal(statuses[0].status, "running");
   assert.equal(statuses[1].status, "running");

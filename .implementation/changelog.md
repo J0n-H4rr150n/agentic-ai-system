@@ -205,6 +205,13 @@ All notable changes to this project will be documented in this file.
 - Added `GET /api/runs` and `GET /api/runs/{run_id}` endpoints for browsing run history
 - Added backend tests covering persistence + API behavior
 
+### F00007_S002: Run List View (Per Workflow)
+
+- Added `workflow_id` association to run creation and run history persistence
+- Added `workflow_id` filtering for `GET /api/runs` and returned `workflow_id` in responses
+- Added minimal per-workflow run history list UI (backed by last-saved workflow id)
+- Added backend and frontend tests for workflow-scoped run history
+
 ### F00004_S001: API Client Module (Frontend)
 
 - Added `frontend/public/js/api/client.js` fetch wrapper with JSON handling and typed errors

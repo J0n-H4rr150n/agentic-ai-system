@@ -2,6 +2,7 @@ export const RUN_STATUSES = /** @type {const} */ ({
   IDLE: "idle",
   RUNNING: "running",
   COMPLETED: "completed",
+  CANCELLED: "cancelled",
   FAILED: "failed",
 });
 
@@ -19,6 +20,10 @@ export function formatRunStatusText({ status, runId = null, error = null }) {
 
   if (status === RUN_STATUSES.COMPLETED) {
     return runId ? `Status: completed (${runId})` : "Status: completed";
+  }
+
+  if (status === RUN_STATUSES.CANCELLED) {
+    return runId ? `Status: cancelled (${runId})` : "Status: cancelled";
   }
 
   if (status === RUN_STATUSES.FAILED) {

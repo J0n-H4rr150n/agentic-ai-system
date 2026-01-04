@@ -11,6 +11,8 @@ import { createRunStatusIndicator, RUN_STATUSES } from "./ui/status.js";
 import { createSaveAsNodeController } from "./ui/save-as-node.js";
 import { createWorkflowStatusIndicator, WORKFLOW_SAVE_STATUSES } from "./ui/workflow-status.js";
 import { createExecutionTraceViewer } from "./ui/trace/index.js";
+import { createRunHistoryApi } from "./api/run-history.js";
+import { createRunHistoryViewer } from "./ui/run-history.js";
 
 function requireElementById(id) {
   const element = document.getElementById(id);
@@ -29,6 +31,7 @@ function init() {
   const saveAsNodeButton = requireElementById("saveAsNodeButton");
   const workflowStatus = requireElementById("workflowStatus");
   const traceRoot = requireElementById("traceRoot");
+  const runHistoryRoot = requireElementById("runHistoryRoot");
 
   const canvas = requireElementById("agentCanvas");
   const host = requireElementById("canvasHost");
@@ -57,6 +60,8 @@ function init() {
   const traceViewer = createExecutionTraceViewer({ rootEl: traceRoot });
   const runApi = createRunApi();
   const workflowApi = createWorkflowApi();
+  const runHistoryApi = createRunHistoryApi();
+  const runHistoryViewer = createRunHistoryViewer({ rootEl: runHistoryRoot, runHistoryApi });
 
   // Load saved agents for display in the palette.
   workflowApi
@@ -79,6 +84,14 @@ function init() {
         nodeManager: manager.nodeManager,
         wireManager: manager.wireManager,
       }),
+    getWorkflowId: () => {
+      try {
+        const v = localStorage.getItem("currentWorkflowId");
+        return v && typeof v === "string" ? v : null;
+      } catch {
+        return null;
+      }
+    },
     onRunStart: (graph) => {
       traceViewer.clear();
       traceViewer.setGraph(graph);
@@ -89,6 +102,10 @@ function init() {
     onStatus: (status, details) => {
       statusIndicator.setStatus(status, details);
       runButton.disabled = status === RUN_STATUSES.RUNNING;
+
+      if (status !== RUN_STATUSES.RUNNING && status !== RUN_STATUSES.IDLE) {
+        runHistoryViewer.refresh();
+      }
     },
   });
 
@@ -106,6 +123,10 @@ function init() {
     onStatus: (status, details) => {
       workflowStatusIndicator.setStatus(status, details);
       saveAsNodeButton.disabled = status === WORKFLOW_SAVE_STATUSES.SAVING;
+
+      if (status === WORKFLOW_SAVE_STATUSES.SAVED && details?.workflowId) {
+        runHistoryViewer.setWorkflowId(details.workflowId);
+      }
     },
   });
 

@@ -44,6 +44,7 @@ class PendingInterrupt(BaseModel):
 class RunRequest(BaseModel):
     graph: GraphDefinition
     mode: RunMode = "run"
+    workflow_id: str | None = Field(default=None, min_length=1)
 
 
 class RunCreatedResponse(BaseModel):
@@ -139,6 +140,17 @@ async def _execute_run(run_id: str, request: RunRequest) -> None:
 
             RUN_HISTORY_STORE.persist_terminal(
                 run_id=rec.run_id,
+                workflow_id=rec.request.workflow_id,
+                status="completed",
+                started_at=rec.started_at,
+                completed_at=rec.completed_at,
+                trace=rec.trace,
+                error=rec.error,
+            )
+
+            RUN_HISTORY_STORE.persist_terminal(
+                run_id=rec.run_id,
+                workflow_id=rec.request.workflow_id,
                 status="completed",
                 started_at=rec.started_at,
                 completed_at=rec.completed_at,
@@ -165,6 +177,17 @@ async def _execute_run(run_id: str, request: RunRequest) -> None:
 
             RUN_HISTORY_STORE.persist_terminal(
                 run_id=rec.run_id,
+                workflow_id=rec.request.workflow_id,
+                status="cancelled",
+                started_at=rec.started_at,
+                completed_at=rec.completed_at,
+                trace=rec.trace,
+                error=rec.error,
+            )
+
+            RUN_HISTORY_STORE.persist_terminal(
+                run_id=rec.run_id,
+                workflow_id=rec.request.workflow_id,
                 status="cancelled",
                 started_at=rec.started_at,
                 completed_at=rec.completed_at,
@@ -256,6 +279,17 @@ async def _execute_run(run_id: str, request: RunRequest) -> None:
 
             RUN_HISTORY_STORE.persist_terminal(
                 run_id=rec.run_id,
+                workflow_id=rec.request.workflow_id,
+                status="failed",
+                started_at=rec.started_at,
+                completed_at=rec.completed_at,
+                trace=rec.trace,
+                error=rec.error,
+            )
+
+            RUN_HISTORY_STORE.persist_terminal(
+                run_id=rec.run_id,
+                workflow_id=rec.request.workflow_id,
                 status="failed",
                 started_at=rec.started_at,
                 completed_at=rec.completed_at,
@@ -530,6 +564,7 @@ def _request_cancel_locked(record: _RunRecord) -> _RunRecord:
 
         RUN_HISTORY_STORE.persist_terminal(
             run_id=record.run_id,
+            workflow_id=record.request.workflow_id,
             status="cancelled",
             started_at=record.started_at,
             completed_at=record.completed_at,

@@ -9,13 +9,14 @@ function defaultSleep(ms) {
 }
 
 function isTerminalStatus(status) {
-  return status === RUN_STATUSES.COMPLETED || status === RUN_STATUSES.FAILED;
+  return status === RUN_STATUSES.COMPLETED || status === RUN_STATUSES.CANCELLED || status === RUN_STATUSES.FAILED;
 }
 
 /**
  * @param {{
  *   runApi: { startRun: Function, getRun: Function, openRunStream?: Function },
  *   getGraph: Function,
+ *   getWorkflowId?: Function,
  *   onRunStart?: Function,
  *   onStatus: Function,
  *   onStep?: Function,
@@ -29,6 +30,7 @@ function isTerminalStatus(status) {
 export function createRunController({
   runApi,
   getGraph,
+  getWorkflowId,
   onRunStart,
   onStatus,
   onStep,
@@ -43,6 +45,9 @@ export function createRunController({
   }
   if (typeof getGraph !== "function") {
     throw new Error("getGraph must be a function");
+  }
+  if (getWorkflowId !== undefined && typeof getWorkflowId !== "function") {
+    throw new Error("getWorkflowId must be a function if provided");
   }
   if (typeof onStatus !== "function") {
     throw new Error("onStatus must be a function");
@@ -70,10 +75,11 @@ export function createRunController({
 
     try {
       const graph = getGraph();
+      const workflowId = getWorkflowId?.() ?? null;
       onRunStart?.(graph);
       onStatus(RUN_STATUSES.RUNNING, { runId: null, error: null });
 
-      const created = await runApi.startRun({ graph });
+      const created = await runApi.startRun({ graph, workflowId });
       const runId = created?.run_id;
 
       // Default to running unless backend says otherwise.

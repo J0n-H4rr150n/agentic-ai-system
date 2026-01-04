@@ -19,6 +19,7 @@ router = APIRouter()
 
 class RunHistoryListItem(BaseModel):
     run_id: str
+    workflow_id: str | None = None
     status: str
     started_at: datetime
     completed_at: datetime
@@ -31,6 +32,7 @@ class RunHistoryListResponse(BaseModel):
 
 class RunHistoryDetailResponse(BaseModel):
     run_id: str
+    workflow_id: str | None = None
     status: str
     started_at: datetime
     completed_at: datetime
@@ -39,12 +41,16 @@ class RunHistoryDetailResponse(BaseModel):
 
 
 @router.get("/api/runs", response_model=RunHistoryListResponse)
-async def list_runs(limit: int = Query(default=100, ge=1, le=500)) -> RunHistoryListResponse:
-    records = RUN_HISTORY_STORE.list(limit=limit)
+async def list_runs(
+    workflow_id: str | None = Query(default=None, min_length=1),
+    limit: int = Query(default=100, ge=1, le=500),
+) -> RunHistoryListResponse:
+    records = RUN_HISTORY_STORE.list(workflow_id=workflow_id, limit=limit)
     return RunHistoryListResponse(
         runs=[
             RunHistoryListItem(
                 run_id=r.run_id,
+                workflow_id=r.workflow_id,
                 status=r.status,
                 started_at=r.started_at,
                 completed_at=r.completed_at,
@@ -63,6 +69,7 @@ async def get_run_history(run_id: str) -> RunHistoryDetailResponse:
 
     return RunHistoryDetailResponse(
         run_id=record.run_id,
+        workflow_id=record.workflow_id,
         status=record.status,
         started_at=record.started_at,
         completed_at=record.completed_at,

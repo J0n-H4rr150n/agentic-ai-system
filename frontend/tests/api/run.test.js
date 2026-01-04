@@ -7,6 +7,10 @@ function makeFetch() {
   return async (url, options) => {
     // Simple route simulator.
     if (url === "/api/run" && options?.method === "POST") {
+      const payload = JSON.parse(options?.body ?? "{}");
+      if (payload?.workflow_id !== undefined && payload.workflow_id !== null && payload.workflow_id !== "w1") {
+        throw new Error("unexpected workflow_id");
+      }
       return {
         ok: true,
         status: 200,
@@ -44,6 +48,15 @@ test("createRunApi.startRun POSTs graph and returns run_id", async () => {
 
   const graph = { version: 1, nodes: [], edges: [] };
   const result = await api.startRun({ graph });
+
+  assert.deepEqual(result, { run_id: "r1", status: "running" });
+});
+
+test("createRunApi.startRun includes workflow_id when workflowId provided", async () => {
+  const api = createRunApi({ baseUrl: "/api", fetchImpl: makeFetch() });
+
+  const graph = { version: 1, nodes: [], edges: [] };
+  const result = await api.startRun({ graph, workflowId: "w1" });
 
   assert.deepEqual(result, { run_id: "r1", status: "running" });
 });
