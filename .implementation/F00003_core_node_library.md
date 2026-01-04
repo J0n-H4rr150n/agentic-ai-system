@@ -19,7 +19,7 @@ Implement the essential nodes needed for the security testing MVP workflow:
 - [x] S001: Start and End Nodes
 - [x] S002: LLM Call Node - Base Interface
 - [x] S003: LLM Call Node - Vertex AI Implementation
-- [ ] S004: LLM Tracing (tokens, timing, decision capture)
+- [x] S004: LLM Tracing (tokens, timing, decision capture)
 - [ ] S005: Playwright Browser Node - Session Management
 - [ ] S006: Playwright Browser Node - Navigation & Actions
 - [ ] S007: Playwright Browser Node - Observation Modes
@@ -37,8 +37,8 @@ Implement the essential nodes needed for the security testing MVP workflow:
 - [x] Configurable model selection (gemini-2.5-flash, gemini-2.5-pro)
 - [x] Provider-agnostic interface (can swap Vertex AI for Claude later)
 - [x] Structured output support (JSON mode)
-- [ ] Tracing captures: input_tokens, output_tokens, elapsed_time_ms
-- [ ] Decision capture: llm_decision, llm_reasoning, llm_confidence
+- [x] Tracing captures: input_tokens, output_tokens, elapsed_time_ms
+- [x] Decision capture: llm_decision, llm_reasoning, llm_confidence
 
 ### Browser Node
 - [ ] Session created on first browser node in run

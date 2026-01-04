@@ -155,3 +155,9 @@ All notable changes to this project will be documented in this file.
 - Implemented lazy provider imports and `asyncio.to_thread(...)` execution to keep tests fast and avoid blocking
 - Added unit tests with fakes (no network)
 - Added `google-cloud-aiplatform` to Poetry + `backend/requirements.txt`
+
+### F00003_S004: LLM Tracing (tokens, timing, decision capture)
+
+- Added `LLMTrace` and helper functions for token/timing/decision fields
+- Updated `LLMCallNode` output to include `trace` with elapsed time and usage
+- Added unit tests for trace extraction and JSON decision capture

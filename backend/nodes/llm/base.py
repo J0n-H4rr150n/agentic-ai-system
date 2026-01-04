@@ -13,9 +13,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import json
+import time
 from typing import Any, Protocol
 
 from backend.nodes.base import BaseNode
+from backend.nodes.llm.tracing import build_llm_trace
 
 
 @dataclass(slots=True)
@@ -82,6 +84,7 @@ class LLMCallNode(BaseNode):
         if max_output_tokens is not None and not isinstance(max_output_tokens, int):
             raise ValueError("LLMCallNode config.max_output_tokens must be an int")
 
+        start = time.perf_counter()
         response = await self._client.complete(
             model=model,
             prompt=prompt,
@@ -89,6 +92,7 @@ class LLMCallNode(BaseNode):
             temperature=float(temperature) if isinstance(temperature, (int, float)) else None,
             max_output_tokens=max_output_tokens,
         )
+        elapsed_time_ms = int(round((time.perf_counter() - start) * 1000))
 
         normalized_json = response.json
         if json_mode and normalized_json is None and response.text is not None:
@@ -97,11 +101,20 @@ class LLMCallNode(BaseNode):
             except json.JSONDecodeError as exc:
                 raise ValueError("LLMCallNode expected JSON output but got non-JSON text") from exc
 
+        trace = build_llm_trace(usage=response.usage, elapsed_time_ms=elapsed_time_ms, payload_json=normalized_json)
         payload = {
             "model": response.model or model,
             "text": response.text,
             "json": normalized_json,
             "usage": None if response.usage is None else {"input_tokens": response.usage.input_tokens, "output_tokens": response.usage.output_tokens},
+            "trace": {
+                "input_tokens": trace.input_tokens,
+                "output_tokens": trace.output_tokens,
+                "elapsed_time_ms": trace.elapsed_time_ms,
+                "llm_decision": trace.llm_decision,
+                "llm_reasoning": trace.llm_reasoning,
+                "llm_confidence": trace.llm_confidence,
+            },
         }
         return {output_key: payload}
 

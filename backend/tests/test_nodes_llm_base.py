@@ -41,6 +41,9 @@ def test_llm_call_node_uses_config_prompt_and_model() -> None:
     assert out["llm_output"]["text"] == "hi"
     assert out["llm_output"]["json"] is None
     assert out["llm_output"]["usage"] == {"input_tokens": 1, "output_tokens": 2}
+    assert isinstance(out["llm_output"]["trace"]["elapsed_time_ms"], int)
+    assert out["llm_output"]["trace"]["input_tokens"] == 1
+    assert out["llm_output"]["trace"]["output_tokens"] == 2
     assert client.calls == [{"model": "gemini-2.5-flash", "prompt": "hello", "json_mode": False, "temperature": None, "max_output_tokens": None}]
 
 
@@ -63,6 +66,17 @@ def test_llm_call_node_json_mode_parses_text_when_json_missing() -> None:
 
     out = asyncio.run(node.execute({}))
     assert out["llm_output"]["json"] == {"a": 1}
+
+
+def test_llm_call_node_extracts_decision_fields_from_json() -> None:
+    client = FakeLLMClient(LLMResponse(json={"llm_decision": "allow", "llm_reasoning": "ok", "llm_confidence": 0.7}))
+    node = LLMCallNode("n1", client=client, config={"model": "m", "prompt": "p", "json_mode": True})
+
+    out = asyncio.run(node.execute({}))
+    trace = out["llm_output"]["trace"]
+    assert trace["llm_decision"] == "allow"
+    assert trace["llm_reasoning"] == "ok"
+    assert trace["llm_confidence"] == 0.7
 
 
 def test_llm_call_node_json_mode_raises_on_invalid_json_text() -> None:
