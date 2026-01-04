@@ -17,6 +17,7 @@ from typing import Any, Callable, Literal
 
 from backend.nodes.base import BaseNode
 from backend.nodes.browser.actions import BrowserActionResult, BrowserPageLike, click, navigate, resolve_selector, type_text
+from backend.nodes.browser.observation import ObservationMode, build_observation
 from backend.nodes.browser.session import BrowserSession, BrowserSessionManager
 
 
@@ -27,6 +28,8 @@ BrowserAction = Literal["navigate", "click", "type"]
 class BrowserNodeConfig:
     action: BrowserAction
     output_key: str = "browser_output"
+
+    observation_mode: ObservationMode | None = None
 
     # navigate
     url: str | None = None
@@ -86,7 +89,12 @@ class BrowserNode(BaseNode):
         else:
             raise ValueError("Unsupported browser action")
 
-        return {cfg.output_key: _result_to_dict(result)}
+        output: dict[str, Any] = _result_to_dict(result)
+        if cfg.observation_mode is not None:
+            observation = build_observation(mode=cfg.observation_mode, page=page)
+            output.update(observation.to_dict())
+
+        return {cfg.output_key: output}
 
     @staticmethod
     def _parse_config(raw: dict[str, Any]) -> BrowserNodeConfig:
@@ -98,9 +106,16 @@ class BrowserNode(BaseNode):
         if not isinstance(output_key, str) or not output_key:
             raise ValueError("BrowserNode config.output_key must be a non-empty string")
 
+        observation_mode = raw.get("observation_mode")
+        if observation_mode is not None and observation_mode not in {"visual", "source_inspector", "traffic_analyst", "full"}:
+            raise ValueError(
+                "BrowserNode config.observation_mode must be one of: visual, source_inspector, traffic_analyst, full"
+            )
+
         return BrowserNodeConfig(
             action=action,
             output_key=output_key,
+            observation_mode=observation_mode,
             url=raw.get("url"),
             url_key=raw.get("url_key"),
             selector=raw.get("selector"),
