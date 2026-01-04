@@ -1,12 +1,14 @@
 from fastapi import FastAPI
 
+from backend.api.routes.health import router as health_router
+from backend.api.routes.run import router as run_router
+
 
 def create_app() -> FastAPI:
     app = FastAPI(title="Visual Agent IDE API")
 
-    @app.get("/api/health")
-    async def health() -> dict:
-        return {"ok": True}
+    app.include_router(health_router)
+    app.include_router(run_router)
 
     return app
 
