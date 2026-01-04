@@ -53,15 +53,35 @@ export function createRunHistoryViewer({
   const title = el("h2", "run-history-title");
   title.textContent = "Run History";
 
+  const filters = el("div", "run-history-filters");
+
+  const statusFilter = el("select", "run-history-filter");
+  statusFilter.setAttribute("aria-label", "Filter by status");
+  statusFilter.append(
+    new Option("All statuses", ""),
+    new Option("Completed", "completed"),
+    new Option("Failed", "failed"),
+    new Option("Cancelled", "cancelled"),
+  );
+
+  const nodeTypeFilter = el("input", "run-history-filter");
+  nodeTypeFilter.type = "text";
+  nodeTypeFilter.placeholder = "Node type…";
+  nodeTypeFilter.setAttribute("aria-label", "Filter by node type");
+
+  filters.append(statusFilter, nodeTypeFilter);
+
   const hint = el("div", "run-history-hint muted");
 
   const list = el("div", "run-history-list");
 
   const wrap = el("div", "run-history-root");
-  wrap.append(title, hint, list);
+  wrap.append(title, filters, hint, list);
   rootEl.replaceChildren(wrap);
 
   let workflowId = null;
+  let status = "";
+  let nodeType = "";
 
   function renderHint(text) {
     hint.textContent = text;
@@ -124,13 +144,27 @@ export function createRunHistoryViewer({
     renderHint(`Workflow: ${workflowId}`);
 
     try {
-      const result = await runHistoryApi.listRuns({ workflowId, limit: 25 });
+      const result = await runHistoryApi.listRuns({
+        workflowId,
+        status: status || null,
+        nodeType: nodeType || null,
+        limit: 25,
+      });
       renderRuns(result?.runs ?? []);
     } catch {
       renderHint(`Workflow: ${workflowId} (failed to load runs)`);
       renderRuns([]);
     }
   }
+
+  function applyFilters() {
+    status = statusFilter.value || "";
+    nodeType = nodeTypeFilter.value.trim();
+    void refresh();
+  }
+
+  statusFilter.addEventListener("change", applyFilters);
+  nodeTypeFilter.addEventListener("change", applyFilters);
 
   function setWorkflowId(nextWorkflowId) {
     workflowId = typeof nextWorkflowId === "string" && nextWorkflowId ? nextWorkflowId : null;

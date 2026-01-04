@@ -198,6 +198,13 @@ All notable changes to this project will be documented in this file.
 - Updated graph parsing to validate supported node types via the registry
 - Added unit tests for discovery idempotency and graph parsing validation
 
+### F00007_S005: Filter/Search (Status + Node Type)
+
+- Added `status` and `node_type` query params to `GET /api/runs` and covered with backend tests
+- Persisted node-id→type mapping into run history so node type filtering is fast and graph-independent
+- Added minimal Run History filters (status select + node type input) and frontend API tests for query params
+- Fixed backend Docker image layout so `backend.*` imports work in-container (enables `make test-backend-docker`)
+
 ### F00007_S001: Persist Run Metadata + Step Traces
 
 - Added in-memory run history store for terminal run records

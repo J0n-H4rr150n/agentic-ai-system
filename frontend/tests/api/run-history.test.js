@@ -99,6 +99,34 @@ test("createRunHistoryApi.listRuns includes workflow_id when workflowId provided
   assert.equal(result.runs[0].workflow_id, "w1");
 });
 
+test("listRuns supports status and nodeType filters", async () => {
+  let called = false;
+  const fetchImpl = async (url, options) => {
+    called = true;
+    assert.equal(options?.method, "GET");
+
+    const u = new URL(url, "http://example.local");
+    assert.equal(u.pathname, "/api/runs");
+    assert.equal(u.searchParams.get("workflow_id"), "wf-1");
+    assert.equal(u.searchParams.get("status"), "failed");
+    assert.equal(u.searchParams.get("node_type"), "llm.openai_chat");
+    assert.equal(u.searchParams.get("limit"), "10");
+
+    return {
+      ok: true,
+      status: 200,
+      headers: new Headers({ "content-type": "application/json" }),
+      async text() {
+        return JSON.stringify({ runs: [] });
+      },
+    };
+  };
+
+  const api = createRunHistoryApi({ baseUrl: "/api", fetchImpl });
+  await api.listRuns({ workflowId: "wf-1", status: "failed", nodeType: "llm.openai_chat", limit: 10 });
+  assert.equal(called, true);
+});
+
 test("createRunHistoryApi.getRun GETs /runs/{id}", async () => {
   const api = createRunHistoryApi({ baseUrl: "/api", fetchImpl: makeFetch() });
   const result = await api.getRun("r1");

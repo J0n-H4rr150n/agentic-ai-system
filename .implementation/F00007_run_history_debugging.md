@@ -1,6 +1,6 @@
 # F00007: Run History & Debugging
 
-**Status:** 🟡 In Progress
+**Status:** 🟢 Complete
 **Phase:** 6
 **Priority:** P1 (High)
 
@@ -12,7 +12,7 @@ Add persistence and UI to browse past runs and debug executions beyond the live 
 - [x] S002: Run list view (per workflow)
 - [x] S003: Run detail view (tree/steps, inputs/outputs, screenshots)
 - [x] S004: Replay from checkpoint (time-travel)
-- [ ] S005: Filter/search by status and node type
+- [x] S005: Filter/search by status and node type
 
 ## Acceptance Criteria
 - Completed runs are discoverable and can be reopened later.

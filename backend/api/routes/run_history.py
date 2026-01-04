@@ -11,7 +11,7 @@ from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
 from backend.models.run import RunCheckpoint, StepTrace
-from backend.runs.store import RUN_HISTORY_STORE
+from backend.runs.store import RUN_HISTORY_STORE, TerminalRunStatus
 
 
 router = APIRouter()
@@ -45,9 +45,11 @@ class RunHistoryDetailResponse(BaseModel):
 @router.get("/api/runs", response_model=RunHistoryListResponse)
 async def list_runs(
     workflow_id: str | None = Query(default=None, min_length=1),
+    status: TerminalRunStatus | None = Query(default=None),
+    node_type: str | None = Query(default=None, min_length=1),
     limit: int = Query(default=100, ge=1, le=500),
 ) -> RunHistoryListResponse:
-    records = RUN_HISTORY_STORE.list(workflow_id=workflow_id, limit=limit)
+    records = RUN_HISTORY_STORE.list(workflow_id=workflow_id, status=status, node_type=node_type, limit=limit)
     return RunHistoryListResponse(
         runs=[
             RunHistoryListItem(

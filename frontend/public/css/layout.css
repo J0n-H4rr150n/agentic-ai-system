@@ -125,6 +125,27 @@
   color: #111827;
 }
 
+.run-history-filters {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 0 0 8px;
+}
+
+.run-history-filter {
+  padding: 6px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #111827;
+  font-size: 11px;
+}
+
+.run-history-filters input.run-history-filter {
+  flex: 1;
+  min-width: 0;
+}
+
 .run-history-hint {
   margin: 0 0 8px;
 }

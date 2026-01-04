@@ -93,6 +93,10 @@ def _now_utc() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def _node_id_to_type_from_graph(graph: GraphDefinition) -> dict[str, str]:
+    return {n.id: n.type for n in (graph.nodes or [])}
+
+
 async def _execute_run(run_id: str, request: RunRequest) -> None:
     with _RUNS_LOCK:
         record = _RUNS[run_id]
@@ -148,6 +152,7 @@ async def _execute_run(run_id: str, request: RunRequest) -> None:
                 trace=rec.trace,
                 error=rec.error,
                 checkpoint=None,
+                node_id_to_type=_node_id_to_type_from_graph(rec.request.graph),
             )
 
         record.events.put(_format_sse(event="status", data={"run_id": run_id, "status": "completed"}))
@@ -185,6 +190,7 @@ async def _execute_run(run_id: str, request: RunRequest) -> None:
                 trace=rec.trace,
                 error=rec.error,
                 checkpoint=checkpoint,
+                node_id_to_type=_node_id_to_type_from_graph(rec.request.graph),
             )
 
         record.events.put(_format_sse(event="status", data={"run_id": run_id, "status": "cancelled"}))
@@ -278,6 +284,7 @@ async def _execute_run(run_id: str, request: RunRequest) -> None:
                 trace=rec.trace,
                 error=rec.error,
                 checkpoint=None,
+                node_id_to_type=_node_id_to_type_from_graph(rec.request.graph),
             )
 
         record.events.put(
@@ -555,6 +562,7 @@ def _request_cancel_locked(record: _RunRecord) -> _RunRecord:
             trace=record.trace,
             error=record.error,
             checkpoint=checkpoint,
+            node_id_to_type=_node_id_to_type_from_graph(record.request.graph),
         )
 
         # Provide a fresh stream for SSE clients to observe the terminal status.
@@ -697,6 +705,7 @@ async def _execute_run_with_checkpoint(
                 trace=rec.trace,
                 error=rec.error,
                 checkpoint=None,
+                node_id_to_type=_node_id_to_type_from_graph(rec.request.graph),
             )
 
         record.events.put(_format_sse(event="status", data={"run_id": run_id, "status": "completed"}))
@@ -735,6 +744,7 @@ async def _execute_run_with_checkpoint(
                 trace=rec.trace,
                 error=rec.error,
                 checkpoint=checkpoint_model,
+                node_id_to_type=_node_id_to_type_from_graph(rec.request.graph),
             )
 
         record.events.put(_format_sse(event="status", data={"run_id": run_id, "status": "cancelled"}))
@@ -828,6 +838,7 @@ async def _execute_run_with_checkpoint(
                 trace=rec.trace,
                 error=rec.error,
                 checkpoint=None,
+                node_id_to_type=_node_id_to_type_from_graph(rec.request.graph),
             )
 
         record.events.put(

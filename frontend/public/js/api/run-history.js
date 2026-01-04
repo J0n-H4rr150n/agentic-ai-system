@@ -8,11 +8,17 @@ export function createRunHistoryApi(options = {}) {
     options.client ?? createApiClient({ baseUrl: options.baseUrl ?? "/api", fetchImpl: options.fetchImpl });
 
   /**
-   * @param {{ workflowId?: string | null, limit?: number, signal?: AbortSignal }} [params]
+   * @param {{ workflowId?: string | null, status?: string | null, nodeType?: string | null, limit?: number, signal?: AbortSignal }} [params]
    */
-  async function listRuns({ workflowId = null, limit = 100, signal } = {}) {
+  async function listRuns({ workflowId = null, status = null, nodeType = null, limit = 100, signal } = {}) {
     if (workflowId !== null && (typeof workflowId !== "string" || !workflowId)) {
       throw new Error("workflowId must be a non-empty string when provided");
+    }
+    if (status !== null && (typeof status !== "string" || !status)) {
+      throw new Error("status must be a non-empty string when provided");
+    }
+    if (nodeType !== null && (typeof nodeType !== "string" || !nodeType)) {
+      throw new Error("nodeType must be a non-empty string when provided");
     }
     if (typeof limit !== "number" || !Number.isFinite(limit) || limit < 1) {
       throw new Error("limit must be a number >= 1");
@@ -21,6 +27,12 @@ export function createRunHistoryApi(options = {}) {
     const qs = new URLSearchParams();
     if (workflowId) {
       qs.set("workflow_id", workflowId);
+    }
+    if (status) {
+      qs.set("status", status);
+    }
+    if (nodeType) {
+      qs.set("node_type", nodeType);
     }
     qs.set("limit", String(Math.floor(limit)));
 
