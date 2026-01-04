@@ -271,3 +271,9 @@ All notable changes to this project will be documented in this file.
   - `POST /api/run/{id}/hitl/edit` (shallow state patch)
   - `POST /api/run/{id}/hitl/reject`
 - Added backend integration tests for HITL pause → allow/edit/reject flows
+
+### F00005_S006: Runtime Control Channel (WebSocket)
+
+- Added WebSocket run control endpoint: `WS /api/run/{id}/control`
+- WebSocket accepts JSON commands for pause/resume/cancel/HITL decisions and returns structured status responses
+- Added backend integration tests for WebSocket control behavior

@@ -14,9 +14,10 @@ import asyncio
 from typing import Any, Literal
 from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, WebSocket
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
+from starlette.websockets import WebSocketDisconnect
 
 from backend.models.graph import GraphDefinition
 from backend.models.run import RunCheckpoint, StepTrace
@@ -453,49 +454,73 @@ class RunControlResponse(BaseModel):
     status: RunStatus
 
 
+class RunControlStateResponse(RunControlResponse):
+    pause_reason: PauseReason | None = None
+    pending_interrupt: PendingInterrupt | None = None
+    error: str | None = None
+
+
+def _control_state_for(record: _RunRecord) -> RunControlStateResponse:
+    return RunControlStateResponse(
+        run_id=record.run_id,
+        status=record.status,
+        pause_reason=record.pause_reason,
+        pending_interrupt=record.pending_interrupt,
+        error=record.error,
+    )
+
+
+def _get_run_record_or_404(run_id: str) -> _RunRecord:
+    record = _RUNS.get(run_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="run_id not found")
+    return record
+
+
+def _request_pause_locked(record: _RunRecord) -> _RunRecord:
+    # Idempotent: pausing a paused/completed/failed/cancelled run does nothing.
+    if record.status == "running":
+        record.pause_requested = True
+    return record
+
+
+def _request_cancel_locked(record: _RunRecord) -> _RunRecord:
+    # Idempotent: cancelling a cancelled/completed/failed run does nothing.
+    if record.status == "running":
+        record.cancel_requested = True
+        record.pause_requested = False
+    elif record.status == "paused":
+        record.status = "cancelled"
+        record.pause_requested = False
+        record.cancel_requested = False
+        record.paused_at = None
+        record.completed_at = _now_utc()
+        record.error = None
+        record.checkpoint = None
+        record.pause_reason = None
+        record.pending_interrupt = None
+
+        # Provide a fresh stream for SSE clients to observe the terminal status.
+        record.events = queue.Queue()
+        record.events.put(_format_sse(event="status", data={"run_id": record.run_id, "status": "cancelled"}))
+        record.events.put(None)
+
+    return record
+
+
 @router.post("/api/run/{run_id}/pause", response_model=RunControlResponse)
 async def pause_run(run_id: str) -> RunControlResponse:
     with _RUNS_LOCK:
-        record = _RUNS.get(run_id)
-
-        if record is None:
-            raise HTTPException(status_code=404, detail="run_id not found")
-
-        # Idempotent: pausing a paused/completed/failed run does nothing.
-        if record.status == "running":
-            record.pause_requested = True
-
+        record = _get_run_record_or_404(run_id)
+        record = _request_pause_locked(record)
         return RunControlResponse(run_id=record.run_id, status=record.status)
 
 
 @router.post("/api/run/{run_id}/cancel", response_model=RunControlResponse)
 async def cancel_run(run_id: str) -> RunControlResponse:
     with _RUNS_LOCK:
-        record = _RUNS.get(run_id)
-
-        if record is None:
-            raise HTTPException(status_code=404, detail="run_id not found")
-
-        # Idempotent: cancelling a cancelled/completed/failed run does nothing.
-        if record.status == "running":
-            record.cancel_requested = True
-            record.pause_requested = False
-        elif record.status == "paused":
-            record.status = "cancelled"
-            record.pause_requested = False
-            record.cancel_requested = False
-            record.paused_at = None
-            record.completed_at = _now_utc()
-            record.error = None
-            record.checkpoint = None
-            record.pause_reason = None
-            record.pending_interrupt = None
-
-            # Provide a fresh stream for clients to observe the terminal status.
-            record.events = queue.Queue()
-            record.events.put(_format_sse(event="status", data={"run_id": run_id, "status": "cancelled"}))
-            record.events.put(None)
-
+        record = _get_run_record_or_404(run_id)
+        record = _request_cancel_locked(record)
         return RunControlResponse(run_id=record.run_id, status=record.status)
 
 
@@ -656,6 +681,124 @@ async def hitl_reject(run_id: str) -> RunControlResponse:
         record.events.put(None)
 
         return RunControlResponse(run_id=record.run_id, status=record.status)
+
+
+class WsControlCommand(BaseModel):
+    action: Literal[
+        "status",
+        "pause",
+        "resume",
+        "cancel",
+        "hitl_allow",
+        "hitl_edit",
+        "hitl_reject",
+    ]
+    state_patch: dict[str, Any] = Field(default_factory=dict)
+
+
+class WsControlResponse(BaseModel):
+    ok: bool
+    state: RunControlStateResponse | None = None
+    error: str | None = None
+
+
+@router.websocket("/api/run/{run_id}/control")
+async def control_ws(websocket: WebSocket, run_id: str) -> None:
+    await websocket.accept()
+
+    # Keep message loop simple and explicit.
+    with _RUNS_LOCK:
+        record = _RUNS.get(run_id)
+        if record is None:
+            await websocket.send_json(WsControlResponse(ok=False, error="run_id not found").model_dump())
+            await websocket.close(code=1008)
+            return
+
+        await websocket.send_json(WsControlResponse(ok=True, state=_control_state_for(record)).model_dump())
+
+    while True:
+        try:
+            raw = await websocket.receive_json()
+        except WebSocketDisconnect:
+            break
+        except Exception:  # noqa: BLE001
+            await websocket.send_json(WsControlResponse(ok=False, error="invalid JSON message").model_dump())
+            continue
+
+        try:
+            cmd = WsControlCommand.model_validate(raw)
+        except Exception as exc:  # noqa: BLE001
+            await websocket.send_json(WsControlResponse(ok=False, error=str(exc)).model_dump())
+            continue
+
+        try:
+            if cmd.action == "status":
+                with _RUNS_LOCK:
+                    record = _get_run_record_or_404(run_id)
+                    await websocket.send_json(WsControlResponse(ok=True, state=_control_state_for(record)).model_dump())
+                continue
+
+            if cmd.action == "pause":
+                with _RUNS_LOCK:
+                    record = _get_run_record_or_404(run_id)
+                    record = _request_pause_locked(record)
+                    await websocket.send_json(WsControlResponse(ok=True, state=_control_state_for(record)).model_dump())
+                continue
+
+            if cmd.action == "cancel":
+                with _RUNS_LOCK:
+                    record = _get_run_record_or_404(run_id)
+                    record = _request_cancel_locked(record)
+                    await websocket.send_json(WsControlResponse(ok=True, state=_control_state_for(record)).model_dump())
+                continue
+
+            if cmd.action == "resume":
+                # Reuse HTTP behavior.
+                resp = await resume_run(run_id)
+                with _RUNS_LOCK:
+                    record = _get_run_record_or_404(run_id)
+                    await websocket.send_json(
+                        WsControlResponse(ok=True, state=_control_state_for(record)).model_dump()
+                    )
+                _ = resp
+                continue
+
+            if cmd.action == "hitl_allow":
+                resp = await hitl_allow(run_id)
+                with _RUNS_LOCK:
+                    record = _get_run_record_or_404(run_id)
+                    await websocket.send_json(
+                        WsControlResponse(ok=True, state=_control_state_for(record)).model_dump()
+                    )
+                _ = resp
+                continue
+
+            if cmd.action == "hitl_edit":
+                resp = await hitl_edit(run_id, HitlEditRequest(state_patch=cmd.state_patch))
+                with _RUNS_LOCK:
+                    record = _get_run_record_or_404(run_id)
+                    await websocket.send_json(
+                        WsControlResponse(ok=True, state=_control_state_for(record)).model_dump()
+                    )
+                _ = resp
+                continue
+
+            if cmd.action == "hitl_reject":
+                resp = await hitl_reject(run_id)
+                with _RUNS_LOCK:
+                    record = _get_run_record_or_404(run_id)
+                    await websocket.send_json(
+                        WsControlResponse(ok=True, state=_control_state_for(record)).model_dump()
+                    )
+                _ = resp
+                continue
+
+            await websocket.send_json(WsControlResponse(ok=False, error="unsupported action").model_dump())
+
+        except HTTPException as exc:
+            await websocket.send_json(WsControlResponse(ok=False, error=str(exc.detail)).model_dump())
+        except Exception as exc:  # noqa: BLE001
+            await websocket.send_json(WsControlResponse(ok=False, error=str(exc)).model_dump())
 
 
 @router.get("/api/run/{run_id}/stream")
