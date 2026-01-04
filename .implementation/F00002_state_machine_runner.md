@@ -1,6 +1,6 @@
 # F00002: State Machine Runner
 
-**Status:** 🟡 In Progress
+**Status:** 🟢 Complete
 **Phase:** 1 (MVP)
 **Priority:** P0 (Critical)
 **Target:** Today
@@ -20,13 +20,13 @@ Build the Python FastAPI backend that accepts a graph JSON payload and executes 
 - [x] S007: Async Executor with Parallel Support
 - [x] S008: Step Tracer (Input/Output/Duration)
 - [x] S009: Run API Endpoints
-- [ ] S010: SSE Streaming for Real-time Updates
+- [x] S010: SSE Streaming for Real-time Updates
 
 ## Acceptance Criteria
 
-- [ ] `POST /api/run` accepts graph JSON, returns `run_id`
-- [ ] `GET /api/run/{id}` returns execution status and trace
-- [ ] `GET /api/run/{id}/stream` returns SSE stream of step updates
+- [x] `POST /api/run` accepts graph JSON, returns `run_id`
+- [x] `GET /api/run/{id}` returns execution status and trace
+- [x] `GET /api/run/{id}/stream` returns SSE stream of step updates
 - [ ] Graph parser validates node types and edge connections
 - [ ] Dependency resolver builds correct execution order
 - [ ] Parallel-capable nodes execute concurrently via asyncio
