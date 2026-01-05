@@ -425,7 +425,7 @@ All tracing data stored in Postgres for analysis and debugging.
 
 - [x] HTML5 Canvas grid with pan/zoom
 - [x] Draggable node primitives (rectangle, diamond)
-- [ ] Container detection (nodes know their parent)
+- [x] Container detection (nodes know their parent)
 - [x] Bezier curve wiring with connection validation
 - [x] Serialization to JSON graph format
 - [x] Basic node palette (static nodes)
@@ -457,7 +457,7 @@ All tracing data stored in Postgres for analysis and debugging.
 #### Action Nodes
 - [x] **LLM Call** — Provider-agnostic (Vertex AI default), model selection per-node
 - [x] **HTTP Request** — Raw HTTP with headers/body
-- [ ] **Code Executor** — Python snippet execution
+- [x] **Code Executor** — Python snippet execution
 - [ ] **HTTP Fuzzer** — Batched requests with LLM-driven analysis loop
 
 #### Browser Nodes
