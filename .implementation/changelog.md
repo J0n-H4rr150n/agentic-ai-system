@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## 2026-01-05
+
+### F00002_S011: Redis Checkpoint Persistence
+- Add checkpoint store abstraction with in-memory default and Redis support via `REDIS_URL`
+- Persist/load/delete checkpoints during pause/resume and terminal transitions
+- Add unit tests for checkpoint stores and update backend deps
+
 ## 2026-01-04
 
 ### F00003_S011: Code Executor Node

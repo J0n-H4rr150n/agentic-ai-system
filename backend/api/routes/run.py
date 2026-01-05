@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+import os
 import json
 import queue
 import threading
@@ -23,12 +24,16 @@ from backend.models.graph import GraphDefinition
 from backend.models.run import RunCheckpoint, StepTrace
 from backend.runner.dependency import topological_sort
 from backend.runner.executor import AsyncExecutor, ExecutionCheckpoint, RunCancelled, RunInterrupted, RunPaused
+from backend.runner.checkpoint import build_checkpoint_store_from_env
 from backend.runner.graph_parser import parse_graph
 from backend.runner.node_factory import build_nodes_for_graph
 from backend.runner.state import StateContainer
 from backend.runner.tracer import StepTracer
 from backend.runs.store import RUN_HISTORY_STORE
 from backend.workflows.store import WORKFLOW_STORE
+
+
+_CHECKPOINT_STORE = build_checkpoint_store_from_env(env=os.environ)
 
 
 RunMode = Literal["run", "simulate", "test"]
@@ -155,6 +160,10 @@ async def _execute_run(run_id: str, request: RunRequest) -> None:
                 node_id_to_type=_node_id_to_type_from_graph(rec.request.graph),
             )
 
+        _CHECKPOINT_STORE.delete(run_id)
+
+        _CHECKPOINT_STORE.delete(run_id)
+
         record.events.put(_format_sse(event="status", data={"run_id": run_id, "status": "completed"}))
         record.events.put(None)
 
@@ -193,6 +202,10 @@ async def _execute_run(run_id: str, request: RunRequest) -> None:
                 node_id_to_type=_node_id_to_type_from_graph(rec.request.graph),
             )
 
+        _CHECKPOINT_STORE.delete(run_id)
+
+        _CHECKPOINT_STORE.delete(run_id)
+
         record.events.put(_format_sse(event="status", data={"run_id": run_id, "status": "cancelled"}))
         record.events.put(None)
 
@@ -224,6 +237,8 @@ async def _execute_run(run_id: str, request: RunRequest) -> None:
             rec.pause_reason = "interrupt"
             rec.pending_interrupt = pending
             rec.pause_requested = False
+
+        _CHECKPOINT_STORE.save(run_id, checkpoint)
 
         record.events.put(
             _format_sse(
@@ -260,6 +275,8 @@ async def _execute_run(run_id: str, request: RunRequest) -> None:
             rec.pause_reason = "manual"
             rec.pending_interrupt = None
 
+        _CHECKPOINT_STORE.save(run_id, checkpoint)
+
         record.events.put(_format_sse(event="status", data={"run_id": run_id, "status": "paused"}))
         record.events.put(None)
 
@@ -287,6 +304,10 @@ async def _execute_run(run_id: str, request: RunRequest) -> None:
                 node_id_to_type=_node_id_to_type_from_graph(rec.request.graph),
             )
 
+        _CHECKPOINT_STORE.delete(run_id)
+
+        _CHECKPOINT_STORE.delete(run_id)
+
         record.events.put(
             _format_sse(event="status", data={"run_id": run_id, "status": "failed", "error": str(exc)})
         )
@@ -298,6 +319,12 @@ async def _resume_run(run_id: str) -> None:
         record = _RUNS[run_id]
         request = record.request
         checkpoint = record.checkpoint
+
+    if checkpoint is None:
+        checkpoint = _CHECKPOINT_STORE.load(run_id)
+        if checkpoint is not None:
+            with _RUNS_LOCK:
+                _RUNS[run_id].checkpoint = checkpoint
 
     if checkpoint is None:
         raise RuntimeError("Cannot resume without a checkpoint")
@@ -565,6 +592,8 @@ def _request_cancel_locked(record: _RunRecord) -> _RunRecord:
             node_id_to_type=_node_id_to_type_from_graph(record.request.graph),
         )
 
+        _CHECKPOINT_STORE.delete(record.run_id)
+
         # Provide a fresh stream for SSE clients to observe the terminal status.
         record.events = queue.Queue()
         record.events.put(_format_sse(event="status", data={"run_id": record.run_id, "status": "cancelled"}))
@@ -604,6 +633,8 @@ async def resume_run(run_id: str) -> RunControlResponse:
             raise HTTPException(status_code=409, detail="run is awaiting a HITL decision")
 
         if record.checkpoint is None:
+            record.checkpoint = _CHECKPOINT_STORE.load(run_id)
+        if record.checkpoint is None:
             raise HTTPException(status_code=409, detail="run has no checkpoint")
 
         record.status = "running"
@@ -629,6 +660,8 @@ async def get_checkpoint(run_id: str) -> RunCheckpoint:
 
     if record is None:
         raise HTTPException(status_code=404, detail="run_id not found")
+    if record.checkpoint is None:
+        record.checkpoint = _CHECKPOINT_STORE.load(run_id)
     if record.checkpoint is None:
         raise HTTPException(status_code=404, detail="checkpoint not found")
 

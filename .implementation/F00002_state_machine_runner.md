@@ -21,6 +21,7 @@ Build the Python FastAPI backend that accepts a graph JSON payload and executes 
 - [x] S008: Step Tracer (Input/Output/Duration)
 - [x] S009: Run API Endpoints
 - [x] S010: SSE Streaming for Real-time Updates
+- [x] S011: Redis Checkpoint Persistence
 
 ## Acceptance Criteria
 

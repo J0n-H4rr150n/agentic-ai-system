@@ -442,7 +442,7 @@ All tracing data stored in Postgres for analysis and debugging.
 - [x] Graph parser → execution plan with dependency resolution
 - [x] Parallel node execution (asyncio)
 - [x] State object passed through graph
-- [ ] Redis integration for checkpoints
+- [x] Redis integration for checkpoints
 - [ ] Execution modes: validate, test, simulate, run
 - [x] Step-by-step tracing/logging
 
