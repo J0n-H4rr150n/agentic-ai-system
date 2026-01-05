@@ -16,6 +16,7 @@ from backend.nodes.control.agent import AgentNode
 from backend.nodes.control.router import RouterNode
 from backend.nodes.control.start import StartNode
 from backend.nodes.http.request import HTTPRequestNode
+from backend.nodes.http.fuzzer import HTTPFuzzerNode
 from backend.nodes.llm.base import LLMCallNode
 from backend.nodes.llm.fake_client import FakeLLMClient
 from backend.nodes.code_executor import CodeExecutorNode
@@ -25,7 +26,7 @@ from backend.nodes.browser.httpx_page import HttpxPage
 from backend.workflows.store import WORKFLOW_STORE
 
 from backend.runner.mode_guard import GuardedNode, simulate_browser_validate, simulate_http_validate
-from backend.runner.test_doubles import TestBrowserNode, TestHTTPRequestNode
+from backend.runner.test_doubles import StubBrowserNode, StubHTTPFuzzerNode, StubHTTPRequestNode
 
 
 RunMode = Literal["run", "simulate", "test"]
@@ -71,16 +72,23 @@ def build_nodes_for_graph(*, run_id: str, graph_nodes: list[Any], mode: RunMode 
             created = RouterNode(node_id, config=config)
         elif node_type == "http_request":
             if mode == "test":
-                created = TestHTTPRequestNode(node_id, config=config)
+                created = StubHTTPRequestNode(node_id, config=config)
             else:
                 created = HTTPRequestNode(node_id, config=config)
+                if mode == "simulate":
+                    created = GuardedNode(inner=created, validate=simulate_http_validate(config))
+        elif node_type == "http_fuzzer":
+            if mode == "test":
+                created = StubHTTPFuzzerNode(node_id, config=config)
+            else:
+                created = HTTPFuzzerNode(node_id, config=config)
                 if mode == "simulate":
                     created = GuardedNode(inner=created, validate=simulate_http_validate(config))
         elif node_type == "llm":
             created = LLMCallNode(node_id, client=llm_client, config=config)
         elif node_type == "browser":
             if mode == "test":
-                created = TestBrowserNode(node_id, config=config)
+                created = StubBrowserNode(node_id, config=config)
             else:
                 created = BrowserNode(
                     node_id,

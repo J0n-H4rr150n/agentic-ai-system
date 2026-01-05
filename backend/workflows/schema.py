@@ -136,6 +136,18 @@ def _infer_node_schema(
 
         return InferredIOSchema(inputs=inputs, outputs=outputs, warnings=warnings)
 
+    if node_type == "http_fuzzer":
+        output_key = cfg.get("output_key", "http_fuzzer_output")
+        if isinstance(output_key, str) and output_key:
+            outputs.add(output_key)
+
+        for key_field in ("url_template_key", "payloads_key", "headers_key"):
+            value = cfg.get(key_field)
+            if isinstance(value, str) and value:
+                inputs.add(_root_key(value))
+
+        return InferredIOSchema(inputs=inputs, outputs=outputs, warnings=warnings)
+
     if node_type == "browser":
         output_key = cfg.get("output_key", "browser_output")
         if isinstance(output_key, str) and output_key:

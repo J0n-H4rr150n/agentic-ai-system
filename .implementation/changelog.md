@@ -6,6 +6,11 @@ All notable changes to this project will be documented in this file.
 
 ## 2026-01-05
 
+### F00003_S012: HTTP Fuzzer Node
+- Add `http_fuzzer` node that expands `{payload}` URL templates into batched HTTP requests
+- Wire into node factory with `test` stubs and `simulate` guards
+- Add unit tests and palette entry
+
 ### F00002_S012: Execution Modes (Validate/Test/Simulate/Run)
 - Add `POST /api/validate` endpoint for structural/type/dependency checks
 - Wire run `mode` into node factory

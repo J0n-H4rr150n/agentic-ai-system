@@ -9,7 +9,16 @@ def test_node_registry_discover_registers_expected_types() -> None:
     registry = NodeRegistry()
     registry.discover()
 
-    for node_type in ["start", "end", "router", "browser", "llm", "http_request", "code_executor"]:
+    for node_type in [
+        "start",
+        "end",
+        "router",
+        "browser",
+        "llm",
+        "http_request",
+        "http_fuzzer",
+        "code_executor",
+    ]:
         assert registry.is_supported(node_type)
 
 
@@ -78,6 +87,39 @@ def test_parse_graph_accepts_code_executor_type() -> None:
                 "size": {"width": 100, "height": 50},
                 "ports": [],
                 "config": {"expression": "state['a'] + 1", "output_key": "b"},
+            },
+        ],
+        edges=[
+            {"id": "e1", "from": {"nodeId": "n1", "portId": "out"}, "to": {"nodeId": "n2", "portId": "in"}},
+        ],
+    )
+
+    plan = parse_graph(graph)
+    assert plan.node_ids == ["n1", "n2"]
+
+
+def test_parse_graph_accepts_http_fuzzer_type() -> None:
+    graph = GraphDefinition(
+        nodes=[
+            {
+                "id": "n1",
+                "type": "start",
+                "position": {"x": 0, "y": 0},
+                "size": {"width": 100, "height": 50},
+                "ports": [],
+                "config": {},
+            },
+            {
+                "id": "n2",
+                "type": "http_fuzzer",
+                "position": {"x": 0, "y": 0},
+                "size": {"width": 100, "height": 50},
+                "ports": [],
+                "config": {
+                    "method": "GET",
+                    "url_template": "https://example.test/?q={payload}",
+                    "payloads": ["a"],
+                },
             },
         ],
         edges=[

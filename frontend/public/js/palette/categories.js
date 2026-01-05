@@ -20,6 +20,7 @@ export const PALETTE_CATEGORIES = [
       { type: "browser", title: "Browser" },
       { type: "llm", title: "LLM" },
       { type: "http_request", title: "HTTP Request" },
+      { type: "http_fuzzer", title: "HTTP Fuzzer" },
       { type: "code_executor", title: "Code Executor" },
     ],
   },

@@ -6,7 +6,6 @@ We enforce conservative restrictions by node type.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any, Callable
 
 from backend.nodes.base import BaseNode
@@ -15,17 +14,13 @@ from backend.nodes.base import BaseNode
 Validator = Callable[[dict[str, Any]], None]
 
 
-@dataclass(frozen=True, slots=True)
 class GuardedNode(BaseNode):
     """Wrap a node with an execution-time validator."""
 
-    _inner: BaseNode
-    _validate: Validator
-
     def __init__(self, *, inner: BaseNode, validate: Validator) -> None:
         super().__init__(node_id=inner.node_id, node_type=inner.node_type)
-        object.__setattr__(self, "_inner", inner)
-        object.__setattr__(self, "_validate", validate)
+        self._inner = inner
+        self._validate = validate
 
     async def execute(self, state: dict[str, Any]) -> dict[str, Any]:
         self._validate(state)

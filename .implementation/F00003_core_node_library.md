@@ -27,6 +27,7 @@ Implement the essential nodes needed for the security testing MVP workflow:
 - [x] S009: Router Node with Conditions
 - [x] S010: Node Registry & Auto-Discovery
 - [x] S011: Code Executor Node
+- [x] S012: HTTP Fuzzer Node
 
 ## Acceptance Criteria
 

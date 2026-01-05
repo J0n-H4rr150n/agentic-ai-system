@@ -12,6 +12,7 @@ import json
 import queue
 import threading
 import asyncio
+import inspect
 from typing import Any, Literal
 from uuid import uuid4
 
@@ -98,6 +99,28 @@ def _now_utc() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def _build_nodes_for_graph_compat(*, run_id: str, graph_nodes: list[Any], mode: RunMode) -> dict[str, Any]:
+    """Call build_nodes_for_graph with backwards-compatible signature.
+
+    Several tests monkeypatch `backend.api.routes.run.build_nodes_for_graph` with a
+    function that only accepts `(run_id, graph_nodes)`. We support both the old
+    signature and the new `mode`-aware signature.
+    """
+
+    fn = build_nodes_for_graph
+    try:
+        params = inspect.signature(fn).parameters
+        if "mode" in params:
+            return fn(run_id=run_id, graph_nodes=graph_nodes, mode=mode)
+        return fn(run_id=run_id, graph_nodes=graph_nodes)
+    except (TypeError, ValueError):
+        # Fallback when signature inspection fails.
+        try:
+            return fn(run_id=run_id, graph_nodes=graph_nodes, mode=mode)
+        except TypeError:
+            return fn(run_id=run_id, graph_nodes=graph_nodes)
+
+
 def _node_id_to_type_from_graph(graph: GraphDefinition) -> dict[str, str]:
     return {n.id: n.type for n in (graph.nodes or [])}
 
@@ -126,7 +149,7 @@ async def _execute_run(run_id: str, request: RunRequest) -> None:
         # Detect cycles early with a clear error.
         topological_sort(plan)
 
-        nodes = build_nodes_for_graph(run_id=run_id, graph_nodes=request.graph.nodes, mode=request.mode)
+        nodes = _build_nodes_for_graph_compat(run_id=run_id, graph_nodes=request.graph.nodes, mode=request.mode)
         executor = AsyncExecutor()
         await executor.run(
             plan,
@@ -348,7 +371,7 @@ async def _resume_run(run_id: str) -> None:
         plan = parse_graph(request.graph)
         topological_sort(plan)
 
-        nodes = build_nodes_for_graph(run_id=run_id, graph_nodes=request.graph.nodes, mode=request.mode)
+        nodes = _build_nodes_for_graph_compat(run_id=run_id, graph_nodes=request.graph.nodes, mode=request.mode)
         executor = AsyncExecutor()
 
         exec_checkpoint = ExecutionCheckpoint(
@@ -707,7 +730,7 @@ async def _execute_run_with_checkpoint(
         plan = parse_graph(request.graph)
         topological_sort(plan)
 
-        nodes = build_nodes_for_graph(run_id=run_id, graph_nodes=request.graph.nodes, mode=request.mode)
+        nodes = _build_nodes_for_graph_compat(run_id=run_id, graph_nodes=request.graph.nodes, mode=request.mode)
         executor = AsyncExecutor()
         await executor.run(
             plan,

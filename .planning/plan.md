@@ -458,7 +458,7 @@ All tracing data stored in Postgres for analysis and debugging.
 - [x] **LLM Call** — Provider-agnostic (Vertex AI default), model selection per-node
 - [x] **HTTP Request** — Raw HTTP with headers/body
 - [x] **Code Executor** — Python snippet execution
-- [ ] **HTTP Fuzzer** — Batched requests with LLM-driven analysis loop
+- [x] **HTTP Fuzzer** — Batched requests with LLM-driven analysis loop
 
 #### Browser Nodes
 - [x] **Playwright Browser** — All observation modes (screenshot, SoM, HTML, network)
