@@ -11,6 +11,7 @@ export const PALETTE_CATEGORIES = [
       { type: "start", title: "Start" },
       { type: "end", title: "End" },
       { type: "router", title: "Router" },
+      { type: "loop", title: "Loop" },
     ],
   },
   {

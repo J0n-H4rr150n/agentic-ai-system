@@ -13,6 +13,7 @@ from typing import Any, Literal
 from backend.nodes.base import BaseNode
 from backend.nodes.control.end import EndNode
 from backend.nodes.control.agent import AgentNode
+from backend.nodes.control.loop import LoopNode
 from backend.nodes.control.router import RouterNode
 from backend.nodes.control.start import StartNode
 from backend.nodes.http.request import HTTPRequestNode
@@ -102,7 +103,9 @@ def build_nodes_for_graph(*, run_id: str, graph_nodes: list[Any], mode: RunMode 
         elif node_type == "code_executor":
             created = CodeExecutorNode(node_id, config=config)
         elif node_type == "agent":
-            created = AgentNode(node_id, run_id=run_id, store=WORKFLOW_STORE, config=config)
+            created = AgentNode(node_id, run_id=run_id, store=WORKFLOW_STORE, mode=mode, config=config)
+        elif node_type == "loop":
+            created = LoopNode(node_id, run_id=run_id, store=WORKFLOW_STORE, mode=mode, config=config)
         else:
             raise ValueError(f"Unsupported node type for node factory: {node_type}")
 

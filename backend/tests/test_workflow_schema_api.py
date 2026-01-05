@@ -175,6 +175,88 @@ def _agent_parent_graph(child_workflow_id: str) -> dict:
     }
 
 
+def _loop_child_graph() -> dict:
+    return {
+        "version": 1,
+        "nodes": [
+            {
+                "id": "ls",
+                "type": "start",
+                "position": {"x": 0, "y": 0},
+                "size": {"width": 1, "height": 1},
+                "ports": [{"id": "ls:out:1", "kind": "output"}],
+                "config": {"initial_state": {"child_loop_out": 1}},
+            },
+            {
+                "id": "le",
+                "type": "end",
+                "position": {"x": 0, "y": 0},
+                "size": {"width": 1, "height": 1},
+                "ports": [{"id": "le:in:1", "kind": "input"}],
+                "config": {"result_key": "child_loop_result"},
+            },
+        ],
+        "edges": [
+            {
+                "id": "le1",
+                "from": {"nodeId": "ls", "portId": "ls:out:1"},
+                "to": {"nodeId": "le", "portId": "le:in:1"},
+            }
+        ],
+    }
+
+
+def _loop_parent_graph(child_workflow_id: str) -> dict:
+    return {
+        "version": 1,
+        "nodes": [
+            {
+                "id": "ps",
+                "type": "start",
+                "position": {"x": 0, "y": 0},
+                "size": {"width": 1, "height": 1},
+                "ports": [{"id": "ps:out:1", "kind": "output"}],
+                "config": {},
+            },
+            {
+                "id": "loop",
+                "type": "loop",
+                "position": {"x": 0, "y": 0},
+                "size": {"width": 1, "height": 1},
+                "ports": [
+                    {"id": "loop:in:1", "kind": "input"},
+                    {"id": "loop:out:1", "kind": "output"},
+                ],
+                "config": {
+                    "workflow_id": child_workflow_id,
+                    "break_key": "should_break",
+                    "output_key": "loop_output",
+                },
+            },
+            {
+                "id": "pe",
+                "type": "end",
+                "position": {"x": 0, "y": 0},
+                "size": {"width": 1, "height": 1},
+                "ports": [{"id": "pe:in:1", "kind": "input"}],
+                "config": {"result_key": "result"},
+            },
+        ],
+        "edges": [
+            {
+                "id": "pe1",
+                "from": {"nodeId": "ps", "portId": "ps:out:1"},
+                "to": {"nodeId": "loop", "portId": "loop:in:1"},
+            },
+            {
+                "id": "pe2",
+                "from": {"nodeId": "loop", "portId": "loop:out:1"},
+                "to": {"nodeId": "pe", "portId": "pe:in:1"},
+            },
+        ],
+    }
+
+
 def test_workflow_schema_infers_inputs_and_outputs() -> None:
     client = TestClient(create_app())
 
@@ -217,3 +299,24 @@ def test_workflow_schema_includes_agent_nested_outputs() -> None:
     assert "child_out" in body["outputs"]
     assert "child_result" in body["outputs"]
     assert "result" in body["outputs"]
+
+
+def test_workflow_schema_includes_loop_nested_outputs() -> None:
+    client = TestClient(create_app())
+
+    child = client.post("/api/workflow", json={"graph": _loop_child_graph()})
+    assert child.status_code == 200
+    child_id = child.json()["workflow_id"]
+
+    parent = client.post("/api/workflow", json={"graph": _loop_parent_graph(child_id)})
+    assert parent.status_code == 200
+    parent_id = parent.json()["workflow_id"]
+
+    resp = client.get(f"/api/workflow/{parent_id}/schema")
+    assert resp.status_code == 200
+    body = resp.json()
+
+    assert "__loop__" in body["outputs"]
+    assert "loop_output" in body["outputs"]
+    assert "child_loop_out" in body["outputs"]
+    assert "child_loop_result" in body["outputs"]

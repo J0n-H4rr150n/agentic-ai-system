@@ -228,5 +228,57 @@ def _infer_node_schema(
 
         return InferredIOSchema(inputs=inputs, outputs=outputs, warnings=warnings)
 
+    if node_type == "loop":
+        outputs.add("__loop__")
+
+        output_key = cfg.get("output_key", "loop_output")
+        if isinstance(output_key, str) and output_key:
+            outputs.add(output_key)
+
+        break_key = cfg.get("break_key")
+        if isinstance(break_key, str) and break_key:
+            inputs.add(_root_key(break_key))
+
+        if store is None:
+            warnings.append("loop node present but store not provided; cannot infer nested schema")
+            return InferredIOSchema(inputs=inputs, outputs=outputs, warnings=warnings)
+
+        workflow_id = cfg.get("workflow_id")
+        version = cfg.get("version")
+        if not isinstance(workflow_id, str) or not workflow_id:
+            warnings.append("loop node missing config.workflow_id; cannot resolve nested workflow")
+            return InferredIOSchema(inputs=inputs, outputs=outputs, warnings=warnings)
+        if version is not None and (not isinstance(version, int) or version < 1):
+            warnings.append("loop node has invalid config.version; cannot resolve nested workflow")
+            return InferredIOSchema(inputs=inputs, outputs=outputs, warnings=warnings)
+
+        if _depth >= max_agent_depth:
+            warnings.append(f"max agent depth reached for workflow_id={workflow_id!r}")
+            return InferredIOSchema(inputs=inputs, outputs=outputs, warnings=warnings)
+
+        try:
+            _, selected = store.get(workflow_id, version=version)
+        except KeyError:
+            warnings.append(f"loop referenced workflow not found: workflow_id={workflow_id!r}")
+            return InferredIOSchema(inputs=inputs, outputs=outputs, warnings=warnings)
+
+        nested = InferredIOSchema(inputs=set(), outputs=set(), warnings=[])
+        for child_node in selected.graph.nodes:
+            _merge_schema(
+                nested,
+                _infer_node_schema(
+                    child_node,
+                    store=store,
+                    max_agent_depth=max_agent_depth,
+                    _depth=_depth + 1,
+                ),
+            )
+
+        inputs.update(nested.inputs)
+        outputs.update(nested.outputs)
+        warnings.extend(nested.warnings)
+
+        return InferredIOSchema(inputs=inputs, outputs=outputs, warnings=warnings)
+
     warnings.append(f"unsupported node type for schema inference: {node_type}")
     return InferredIOSchema(inputs=inputs, outputs=outputs, warnings=warnings)

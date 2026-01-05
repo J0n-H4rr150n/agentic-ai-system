@@ -466,7 +466,7 @@ All tracing data stored in Postgres for analysis and debugging.
 
 #### Control Nodes
 - [x] **Router** — Conditional branching with dynamic output ports
-- [ ] **Loop** — Iterate with break condition
+- [x] **Loop** — Iterate with break condition
 - [ ] **Parallel Gate** — Fork/join for parallel branches
 
 **Deliverable:** Node library sufficient for web security testing workflow.

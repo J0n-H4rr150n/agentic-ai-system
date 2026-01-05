@@ -31,6 +31,7 @@ class AgentNode(BaseNode):
         *,
         run_id: str,
         store: WorkflowStore,
+        mode: str = "run",
         config: dict[str, Any] | None = None,
     ) -> None:
         super().__init__(node_id=node_id, node_type="agent")
@@ -38,9 +39,12 @@ class AgentNode(BaseNode):
             raise ValueError("run_id must be a non-empty string")
         if not isinstance(store, WorkflowStore):
             raise ValueError("store must be a WorkflowStore")
+        if mode not in {"run", "simulate", "test"}:
+            raise ValueError("mode must be one of: run, simulate, test")
 
         self._run_id = run_id
         self._store = store
+        self._mode = mode
         self._config = dict(config or {})
 
     async def execute(self, state: dict[str, Any]) -> dict[str, Any]:
@@ -64,7 +68,7 @@ class AgentNode(BaseNode):
         # Import locally to avoid circular imports (node_factory imports AgentNode).
         from backend.runner.node_factory import build_nodes_for_graph
 
-        nodes = build_nodes_for_graph(run_id=self._run_id, graph_nodes=selected.graph.nodes)
+        nodes = build_nodes_for_graph(run_id=self._run_id, graph_nodes=selected.graph.nodes, mode=self._mode)
         tracer = StepTracer()
 
         executor = AsyncExecutor()

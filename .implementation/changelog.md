@@ -6,6 +6,11 @@ All notable changes to this project will be documented in this file.
 
 ## 2026-01-05
 
+### F00003_S013: Loop Control Node
+- Add `loop` control node to iterate a referenced workflow until a break condition or max iterations
+- Propagate execution mode into nested agent/loop workflow execution
+- Update schema inference and palette; add Docker-verified tests
+
 ### F00003_S012: HTTP Fuzzer Node
 - Add `http_fuzzer` node that expands `{payload}` URL templates into batched HTTP requests
 - Wire into node factory with `test` stubs and `simulate` guards

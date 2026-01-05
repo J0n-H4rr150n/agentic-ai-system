@@ -13,6 +13,7 @@ def test_node_registry_discover_registers_expected_types() -> None:
         "start",
         "end",
         "router",
+        "loop",
         "browser",
         "llm",
         "http_request",
