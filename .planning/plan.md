@@ -443,7 +443,7 @@ All tracing data stored in Postgres for analysis and debugging.
 - [x] Parallel node execution (asyncio)
 - [x] State object passed through graph
 - [x] Redis integration for checkpoints
-- [ ] Execution modes: validate, test, simulate, run
+- [x] Execution modes: validate, test, simulate, run
 - [x] Step-by-step tracing/logging
 
 **Deliverable:** API that runs a graph and returns execution trace.

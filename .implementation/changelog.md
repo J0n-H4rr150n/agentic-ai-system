@@ -6,6 +6,11 @@ All notable changes to this project will be documented in this file.
 
 ## 2026-01-05
 
+### F00002_S012: Execution Modes (Validate/Test/Simulate/Run)
+- Add `POST /api/validate` endpoint for structural/type/dependency checks
+- Wire run `mode` into node factory
+- Implement `test` stubs and `simulate` side-effect guards for external nodes
+
 ### F00002_S011: Redis Checkpoint Persistence
 - Add checkpoint store abstraction with in-memory default and Redis support via `REDIS_URL`
 - Persist/load/delete checkpoints during pause/resume and terminal transitions

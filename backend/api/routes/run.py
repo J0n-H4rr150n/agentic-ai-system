@@ -126,7 +126,7 @@ async def _execute_run(run_id: str, request: RunRequest) -> None:
         # Detect cycles early with a clear error.
         topological_sort(plan)
 
-        nodes = build_nodes_for_graph(run_id=run_id, graph_nodes=request.graph.nodes)
+        nodes = build_nodes_for_graph(run_id=run_id, graph_nodes=request.graph.nodes, mode=request.mode)
         executor = AsyncExecutor()
         await executor.run(
             plan,
@@ -348,7 +348,7 @@ async def _resume_run(run_id: str) -> None:
         plan = parse_graph(request.graph)
         topological_sort(plan)
 
-        nodes = build_nodes_for_graph(run_id=run_id, graph_nodes=request.graph.nodes)
+        nodes = build_nodes_for_graph(run_id=run_id, graph_nodes=request.graph.nodes, mode=request.mode)
         executor = AsyncExecutor()
 
         exec_checkpoint = ExecutionCheckpoint(
@@ -707,7 +707,7 @@ async def _execute_run_with_checkpoint(
         plan = parse_graph(request.graph)
         topological_sort(plan)
 
-        nodes = build_nodes_for_graph(run_id=run_id, graph_nodes=request.graph.nodes)
+        nodes = build_nodes_for_graph(run_id=run_id, graph_nodes=request.graph.nodes, mode=request.mode)
         executor = AsyncExecutor()
         await executor.run(
             plan,

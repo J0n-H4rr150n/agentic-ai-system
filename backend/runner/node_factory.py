@@ -8,7 +8,7 @@ This factory provides a deterministic, testable construction path for the MVP.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 from backend.nodes.base import BaseNode
 from backend.nodes.control.end import EndNode
@@ -24,12 +24,21 @@ from backend.nodes.browser.session import BrowserSession, BrowserSessionManager
 from backend.nodes.browser.httpx_page import HttpxPage
 from backend.workflows.store import WORKFLOW_STORE
 
+from backend.runner.mode_guard import GuardedNode, simulate_browser_validate, simulate_http_validate
+from backend.runner.test_doubles import TestBrowserNode, TestHTTPRequestNode
 
-def build_nodes_for_graph(*, run_id: str, graph_nodes: list[Any]) -> dict[str, BaseNode]:
+
+RunMode = Literal["run", "simulate", "test"]
+
+
+def build_nodes_for_graph(*, run_id: str, graph_nodes: list[Any], mode: RunMode = "run") -> dict[str, BaseNode]:
     """Build executable node instances for the given graph nodes."""
 
     if not isinstance(run_id, str) or not run_id:
         raise ValueError("run_id must be a non-empty string")
+
+    if mode not in {"run", "simulate", "test"}:
+        raise ValueError("mode must be one of: run, simulate, test")
 
     session_manager = BrowserSessionManager()
 
@@ -61,17 +70,27 @@ def build_nodes_for_graph(*, run_id: str, graph_nodes: list[Any]) -> dict[str, B
         elif node_type == "router":
             created = RouterNode(node_id, config=config)
         elif node_type == "http_request":
-            created = HTTPRequestNode(node_id, config=config)
+            if mode == "test":
+                created = TestHTTPRequestNode(node_id, config=config)
+            else:
+                created = HTTPRequestNode(node_id, config=config)
+                if mode == "simulate":
+                    created = GuardedNode(inner=created, validate=simulate_http_validate(config))
         elif node_type == "llm":
             created = LLMCallNode(node_id, client=llm_client, config=config)
         elif node_type == "browser":
-            created = BrowserNode(
-                node_id,
-                run_id=run_id,
-                session_manager=session_manager,
-                session_factory=session_factory,
-                config=config,
-            )
+            if mode == "test":
+                created = TestBrowserNode(node_id, config=config)
+            else:
+                created = BrowserNode(
+                    node_id,
+                    run_id=run_id,
+                    session_manager=session_manager,
+                    session_factory=session_factory,
+                    config=config,
+                )
+                if mode == "simulate":
+                    created = GuardedNode(inner=created, validate=simulate_browser_validate(config))
         elif node_type == "code_executor":
             created = CodeExecutorNode(node_id, config=config)
         elif node_type == "agent":
