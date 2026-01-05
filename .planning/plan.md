@@ -477,13 +477,13 @@ All tracing data stored in Postgres for analysis and debugging.
 
 **Goal:** Interrupt handling, pause/resume, approval gates.
 
-- [ ] Interrupt point configuration on nodes
-- [ ] Pause execution → persist state to Redis
-- [ ] Resume from checkpoint
-- [ ] Human-in-the-loop UI (non-modal)
-- [ ] Allow/Edit/Reject actions
-- [ ] Force-stop mechanism
-- [ ] WebSocket for real-time execution updates
+- [x] Interrupt point configuration on nodes
+- [x] Pause execution → persist state to Redis
+- [x] Resume from checkpoint
+- [x] Human-in-the-loop UI (non-modal)
+- [x] Allow/Edit/Reject actions
+- [x] Force-stop mechanism
+- [x] WebSocket for real-time execution updates
 
 **Deliverable:** Full execution control with human oversight.
 
@@ -493,11 +493,11 @@ All tracing data stored in Postgres for analysis and debugging.
 
 **Goal:** Save graphs as reusable palette nodes with versioning.
 
-- [ ] "Save as Node" action on containers
-- [ ] Version history in Postgres
-- [ ] Saved agents appear in palette
-- [ ] Nested execution (agent-within-agent)
-- [ ] Input/output schema inference from graph
+- [x] "Save as Node" action on containers
+- [x] Version history in Postgres
+- [x] Saved agents appear in palette
+- [x] Nested execution (agent-within-agent)
+- [x] Input/output schema inference from graph
 
 **Deliverable:** Build complex agents from saved sub-agents.
 
@@ -507,11 +507,11 @@ All tracing data stored in Postgres for analysis and debugging.
 
 **Goal:** GitHub Actions-style run viewer.
 
-- [ ] Run list view (all runs for a workflow)
-- [ ] Collapsible step tree per run
-- [ ] Expand step → see inputs, outputs, screenshots
-- [ ] Time-travel: replay from any checkpoint
-- [ ] Filter/search by status, node type
+- [x] Run list view (all runs for a workflow)
+- [x] Collapsible step tree per run
+- [x] Expand step → see inputs, outputs, screenshots
+- [x] Time-travel: replay from any checkpoint
+- [x] Filter/search by status, node type
 
 **Deliverable:** Full observability into past runs.
 
