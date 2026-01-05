@@ -29,6 +29,7 @@ Implement the essential nodes needed for the security testing MVP workflow:
 - [x] S011: Code Executor Node
 - [x] S012: HTTP Fuzzer Node
 - [x] S013: Loop Control Node
+- [x] S014: Parallel Gate Control Node
 
 ## Acceptance Criteria
 

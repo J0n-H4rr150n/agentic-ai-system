@@ -3,6 +3,7 @@ import asyncio
 import pytest
 
 from backend.nodes.control.end import EndNode
+from backend.nodes.control.parallel_gate import ParallelGateNode
 from backend.nodes.control.router import RouterNode
 from backend.nodes.control.start import StartNode
 
@@ -117,3 +118,21 @@ def test_router_node_rejects_invalid_regex() -> None:
     )
     with pytest.raises(ValueError, match="invalid regex"):
         asyncio.run(node.execute({"x": "hello"}))
+
+
+def test_parallel_gate_join_outputs_default_key() -> None:
+    node = ParallelGateNode("g1", config={"gate": "join"})
+    out = asyncio.run(node.execute({"x": 1}))
+    assert out == {"parallel_gate_output": {"gate": "join"}}
+
+
+def test_parallel_gate_fork_requires_fanout() -> None:
+    node = ParallelGateNode("g1", config={"gate": "fork"})
+    with pytest.raises(ValueError, match="fanout"):
+        asyncio.run(node.execute({}))
+
+
+def test_parallel_gate_fork_accepts_fanout_and_outputs_it() -> None:
+    node = ParallelGateNode("g1", config={"gate": "fork", "fanout": 2, "output_key": "pg"})
+    out = asyncio.run(node.execute({}))
+    assert out == {"pg": {"gate": "fork", "fanout": 2}}

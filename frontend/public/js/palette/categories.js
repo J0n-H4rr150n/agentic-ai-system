@@ -12,6 +12,7 @@ export const PALETTE_CATEGORIES = [
       { type: "end", title: "End" },
       { type: "router", title: "Router" },
       { type: "loop", title: "Loop" },
+      { type: "parallel_gate", title: "Parallel Gate" },
     ],
   },
   {

@@ -113,6 +113,12 @@ def _infer_node_schema(
 
         return InferredIOSchema(inputs=inputs, outputs=outputs, warnings=warnings)
 
+    if node_type == "parallel_gate":
+        output_key = cfg.get("output_key", "parallel_gate_output")
+        if isinstance(output_key, str) and output_key:
+            outputs.add(output_key)
+        return InferredIOSchema(inputs=inputs, outputs=outputs, warnings=warnings)
+
     if node_type == "llm":
         output_key = cfg.get("output_key", "llm_output")
         if isinstance(output_key, str) and output_key:

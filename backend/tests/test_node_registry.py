@@ -14,6 +14,7 @@ def test_node_registry_discover_registers_expected_types() -> None:
         "end",
         "router",
         "loop",
+        "parallel_gate",
         "browser",
         "llm",
         "http_request",

@@ -11,6 +11,11 @@ All notable changes to this project will be documented in this file.
 - Propagate execution mode into nested agent/loop workflow execution
 - Update schema inference and palette; add Docker-verified tests
 
+### F00003_S014: Parallel Gate Control Node
+- Added `parallel_gate` control node for explicit fork/join boundaries (no runner semantic changes)
+- Wired into node factory, schema inference, and palette
+- Added unit and integration tests; Docker backend tests green
+
 ### F00003_S012: HTTP Fuzzer Node
 - Add `http_fuzzer` node that expands `{payload}` URL templates into batched HTTP requests
 - Wire into node factory with `test` stubs and `simulate` guards

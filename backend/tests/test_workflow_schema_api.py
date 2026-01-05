@@ -320,3 +320,63 @@ def test_workflow_schema_includes_loop_nested_outputs() -> None:
     assert "loop_output" in body["outputs"]
     assert "child_loop_out" in body["outputs"]
     assert "child_loop_result" in body["outputs"]
+
+
+def test_workflow_schema_includes_parallel_gate_output_key() -> None:
+    client = TestClient(create_app())
+
+    graph = {
+        "version": 1,
+        "nodes": [
+            {
+                "id": "s",
+                "type": "start",
+                "position": {"x": 0, "y": 0},
+                "size": {"width": 1, "height": 1},
+                "ports": [{"id": "s:out:1", "kind": "output"}],
+                "config": {},
+            },
+            {
+                "id": "g",
+                "type": "parallel_gate",
+                "position": {"x": 0, "y": 0},
+                "size": {"width": 1, "height": 1},
+                "ports": [
+                    {"id": "g:in:1", "kind": "input"},
+                    {"id": "g:out:1", "kind": "output"},
+                ],
+                "config": {"gate": "join", "output_key": "pg"},
+            },
+            {
+                "id": "e",
+                "type": "end",
+                "position": {"x": 0, "y": 0},
+                "size": {"width": 1, "height": 1},
+                "ports": [{"id": "e:in:1", "kind": "input"}],
+                "config": {"result_key": "result"},
+            },
+        ],
+        "edges": [
+            {
+                "id": "e1",
+                "from": {"nodeId": "s", "portId": "s:out:1"},
+                "to": {"nodeId": "g", "portId": "g:in:1"},
+            },
+            {
+                "id": "e2",
+                "from": {"nodeId": "g", "portId": "g:out:1"},
+                "to": {"nodeId": "e", "portId": "e:in:1"},
+            },
+        ],
+    }
+
+    created = client.post("/api/workflow", json={"graph": graph})
+    assert created.status_code == 200
+    workflow_id = created.json()["workflow_id"]
+
+    resp = client.get(f"/api/workflow/{workflow_id}/schema")
+    assert resp.status_code == 200
+    body = resp.json()
+
+    assert "pg" in body["outputs"]
+    assert "result" in body["outputs"]
