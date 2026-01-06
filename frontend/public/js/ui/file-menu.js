@@ -28,7 +28,9 @@ function renderWorkflowOptions({ document, selectEl, workflows }) {
   if (!workflows.length) {
     const opt = document.createElement("option");
     opt.value = "";
-    opt.textContent = "No workflows (use Save as Node)";
+        const displayName = wf.name || wf.workflowId;
+    const version = typeof wf.latestVersion === "number" ? ` (v${wf.latestVersion})` : "";
+    opt.textContent = "No workflows (use Save)";
     selectEl.appendChild(opt);
     return;
   }
@@ -36,8 +38,10 @@ function renderWorkflowOptions({ document, selectEl, workflows }) {
   for (const wf of workflows) {
     const opt = document.createElement("option");
     opt.value = wf.workflowId;
+        const displayName = wf.name || wf.workflowId;
+    const version = typeof wf.latestVersion === "number" ? ` (v${wf.latestVersion})` : "";
     opt.textContent =
-      typeof wf.latestVersion === "number" ? `${wf.workflowId} (v${wf.latestVersion})` : wf.workflowId;
+      `${displayName}${version}`;
     selectEl.appendChild(opt);
   }
 
@@ -114,7 +118,9 @@ export function createFileMenuController(params) {
       workflowSelectEl.replaceChildren();
       const opt = document.createElement("option");
       opt.value = "";
-      opt.textContent = "Failed to load";
+          const displayName = wf.name || wf.workflowId;
+    const version = typeof wf.latestVersion === "number" ? ` (v${wf.latestVersion})` : "";
+    opt.textContent = "Failed to load";
       workflowSelectEl.appendChild(opt);
       workflowSelectEl.disabled = true;
       loadWorkflowButtonEl.disabled = true;

@@ -21,6 +21,15 @@ export class NodeManager {
     this._nodes.push(node);
   }
 
+  removeNode(nodeId) {
+    const index = this._nodes.findIndex(n => n.id === nodeId);
+    if (index !== -1) {
+      this._nodes.splice(index, 1);
+      return true;
+    }
+    return false;
+  }
+
   addFromPalette({ type, title, position }) {
     const id = createId(`node-${type}`);
     let node;

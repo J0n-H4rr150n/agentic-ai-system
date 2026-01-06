@@ -24,13 +24,24 @@ export function createSaveAsNodeController({ workflowApi, getGraph, onStatus }) 
     if (inFlight) {
       return;
     }
+
+    // Prompt for workflow name
+    const name = prompt("Enter a name for this workflow:", "My Workflow");
+    if (!name || !name.trim()) {
+      // User cancelled or entered empty name
+      return;
+    }
+
     inFlight = true;
 
     try {
       const graph = getGraph();
       onStatus(WORKFLOW_SAVE_STATUSES.SAVING, { workflowId: null, error: null });
 
-      const created = await workflowApi.createWorkflow({ graph });
+      const created = await workflowApi.createWorkflow({
+        graph,
+        name: name.trim()
+      });
       const workflowId = created?.workflow_id ?? null;
 
       onStatus(WORKFLOW_SAVE_STATUSES.SAVED, { workflowId, error: null });
