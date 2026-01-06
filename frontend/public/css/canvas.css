@@ -10,26 +10,27 @@
   bottom: 20px;
   right: 20px;
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
   background: var(--chrome-bg);
   border: 1px solid var(--chrome-border);
-  border-radius: 8px;
-  padding: 8px;
+  border-radius: 6px;
+  padding: 6px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   z-index: 100;
 }
 
 .zoom-control-button {
-  padding: 8px 12px;
+  padding: 6px 10px;
   border: 1px solid var(--border-0);
-  border-radius: 6px;
+  border-radius: 4px;
   background: var(--surface-0);
   color: var(--text-0);
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  min-width: 40px;
+  min-width: 32px;
   transition: all 0.15s;
 }
 
@@ -43,15 +44,18 @@
 }
 
 .zoom-control-button--wide {
-  width: 100%;
   font-size: 11px;
+  padding: 6px 12px;
 }
 
 .zoom-display {
-  padding: 6px 8px;
+  padding: 4px 10px;
   text-align: center;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
-  color: var(--text-0);
+  color: var(--chrome-fg);
+  background: var(--surface-0);
+  border-radius: 4px;
   font-variant-numeric: tabular-nums;
+  min-width: 48px;
 }

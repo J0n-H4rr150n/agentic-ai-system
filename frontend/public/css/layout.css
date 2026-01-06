@@ -117,7 +117,7 @@
   margin: 0 0 8px;
   font-size: 12px;
   font-weight: 600;
-  color: var(--text-0);
+  color: var(--chrome-fg);
 }
 
 .properties-hint {
@@ -133,7 +133,7 @@
 
 .properties-label {
   font-size: 11px;
-  color: var(--text-1);
+  color: var(--chrome-fg);
 }
 
 .properties-input,
@@ -588,4 +588,112 @@
   border: 1px solid var(--border-0);
   border-radius: 8px;
   display: block;
+}
+
+
+/* Config Form Styles */
+.config-form-container {
+  margin-top: 16px;
+}
+
+.config-form-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-1);
+  margin-bottom: 12px;
+  letter-spacing: 0.5px;
+}
+
+.config-form-row {
+  margin-bottom: 14px;
+}
+
+.config-form-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--chrome-fg);
+  margin-bottom: 4px;
+}
+
+.config-form-input,
+.config-form-select,
+.config-form-textarea {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--border-0);
+  border-radius: 6px;
+  background: var(--surface-0);
+  color: var(--chrome-fg);
+  font-size: 12px;
+  font-family: system-ui, -apple-system, sans-serif;
+  transition: border-color 0.15s;
+}
+
+.config-form-input:focus,
+.config-form-select:focus,
+.config-form-textarea:focus {
+  outline: none;
+  border-color: var(--border-1);
+}
+
+.config-form-textarea {
+  resize: vertical;
+  min-height: 60px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 11px;
+}
+
+.config-form-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.config-form-help {
+  font-size: 10px;
+  color: var(--text-1);
+  margin-top: 3px;
+  font-style: italic;
+}
+
+.config-form-hint {
+  font-size: 11px;
+  color: var(--text-1);
+  padding: 12px;
+  background: var(--surface-1);
+  border-radius: 6px;
+  margin-top: 8px;
+}
+
+/* Advanced JSON Section */
+.config-advanced {
+  margin-top: 16px;
+  border: 1px solid var(--border-0);
+  border-radius: 8px;
+  padding: 0;
+}
+
+.config-advanced-summary {
+  padding: 10px 12px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--chrome-fg);
+  list-style: none;
+}
+
+.config-advanced-summary::-webkit-details-marker {
+  display: none;
+}
+
+.config-advanced[open] .config-advanced-summary {
+  border-bottom: 1px solid var(--border-0);
+}
+
+.config-advanced .properties-textarea {
+  margin: 12px;
+  width: calc(100% - 24px);
 }
