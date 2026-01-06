@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## 2026-01-06
+
+### F00013_S001 & S002: Canvas UI Enhancements
+- Container drag now moves all child nodes (maintaining relative positions)
+- Add zoom controls UI in bottom-right: +/- buttons, percentage display, Fit button
+- Implement zoom functions: `zoomIn()`, `zoomOut()`, `fitToScreen()` in viewport.js
+- Add keyboard shortcuts: Ctrl+=/-, Ctrl+0 (fit), Ctrl+1 (100%)
+- Create `ui/zoom-controls.js` component with clean floating panel design
+
+### F00012_S001: Container Parent-Child Relationship Display
+- Add parent container display to node properties panel (read-only field)
+- Show children list in container properties when container is selected
+- Display child count in container title (e.g., "Container (3)")
+- Update renderer to pass `nodeManager` to container render method
+- Add CSS styling for children list with scrollable container
+- Parent tracking already functional via `updateParentForNode` on drag/drop
+
+---
+
 ## 2026-01-05
 
 ### F00009_S001: Resize Container Nodes

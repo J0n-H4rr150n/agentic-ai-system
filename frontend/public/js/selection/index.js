@@ -126,7 +126,25 @@ export class SelectionManager {
       }
 
       const world = this._eventToWorld(e);
-      node.position = computeDraggedTopLeftWorld(world, this._dragging.offsetWorld);
+      const nextPosition = computeDraggedTopLeftWorld(world, this._dragging.offsetWorld);
+
+      // If dragging a container, move children with it
+      if (node.type === "container") {
+        const dx = nextPosition.x - node.position.x;
+        const dy = nextPosition.y - node.position.y;
+
+        // Move container
+        node.position = nextPosition;
+
+        // Move all children by the same delta
+        const children = this.nodeManager.getNodes().filter(n => n.parentId === node.id);
+        for (const child of children) {
+          child.position.x += dx;
+          child.position.y += dy;
+        }
+      } else {
+        node.position = nextPosition;
+      }
     };
 
     this._onMouseUp = () => {

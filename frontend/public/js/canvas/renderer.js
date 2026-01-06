@@ -47,7 +47,10 @@ export function createRenderer({ ctx, viewport, nodeManager, wireManager, wireIn
       if (nodeManager) {
         const selectedId = nodeManager.getSelectedNodeId?.() ?? null;
         for (const node of nodeManager.getNodes()) {
-          node.render(ctx, viewport, { selected: node.id === selectedId });
+          node.render(ctx, viewport, {
+            selected: node.id === selectedId,
+            nodeManager: nodeManager
+          });
         }
       }
     },

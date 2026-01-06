@@ -47,3 +47,53 @@ export function screenToWorld(point, viewport) {
     y: point.y / viewport.scale - viewport.offsetY,
   };
 }
+
+export function zoomIn(viewport, { centerScreen, factor = 1.2 }) {
+  const nextScale = clampScale(viewport.scale * factor);
+  zoomAtScreenPoint(viewport, centerScreen, nextScale);
+}
+
+export function zoomOut(viewport, { centerScreen, factor = 1.2 }) {
+  const nextScale = clampScale(viewport.scale / factor);
+  zoomAtScreenPoint(viewport, centerScreen, nextScale);
+}
+
+export function fitToScreen(viewport, { nodes, canvasWidth, canvasHeight, padding = 60 }) {
+  if (!nodes || nodes.length === 0) {
+    // No nodes, reset to default view
+    viewport.scale = 1;
+    viewport.offsetX = 0;
+    viewport.offsetY = 0;
+    return;
+  }
+
+  // Calculate bounding box of all nodes
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+
+  for (const node of nodes) {
+    const bounds = node.getBoundsWorld();
+    minX = Math.min(minX, bounds.x);
+    minY = Math.min(minY, bounds.y);
+    maxX = Math.max(maxX, bounds.x + bounds.width);
+    maxY = Math.max(maxY, bounds.y + bounds.height);
+  }
+
+  const contentWidth = maxX - minX;
+  const contentHeight = maxY - minY;
+
+  // Calculate scale to fit with padding
+  const scaleX = (canvasWidth - padding * 2) / contentWidth;
+  const scaleY = (canvasHeight - padding * 2) / contentHeight;
+  const scale = clampScale(Math.min(scaleX, scaleY));
+
+  // Center the content
+  const centerX = (minX + maxX) / 2;
+  const centerY = (minY + maxY) / 2;
+
+  viewport.scale = scale;
+  viewport.offsetX = (canvasWidth / 2) / scale - centerX;
+  viewport.offsetY = (canvasHeight / 2) / scale - centerY;
+}

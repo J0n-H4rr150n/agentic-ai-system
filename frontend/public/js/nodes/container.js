@@ -24,6 +24,12 @@ export class ContainerNode extends BaseNode {
     const width = this.size.width * viewport.scale;
     const height = this.size.height * viewport.scale;
 
+    // Get child count if nodeManager is provided
+    const childCount = options.nodeManager
+      ? options.nodeManager.getNodes().filter(n => n.parentId === this.id).length
+      : 0;
+    const titleText = childCount > 0 ? `${this.title} (${childCount})` : this.title;
+
     ctx.save();
     ctx.translate(topLeft.x, topLeft.y);
 
@@ -44,7 +50,7 @@ export class ContainerNode extends BaseNode {
     ctx.fillStyle = "#0f172a";
     ctx.font = `${12 * viewport.scale}px system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif`;
     ctx.textBaseline = "top";
-    ctx.fillText(this.title, 10 * viewport.scale, 10 * viewport.scale);
+    ctx.fillText(titleText, 10 * viewport.scale, 10 * viewport.scale);
 
     if (options.selected) {
       const handleSize = CONTAINER_RESIZE_HANDLE_SIZE_WORLD * viewport.scale;

@@ -17,6 +17,7 @@ import { createRunHistoryViewer } from "./ui/run-history.js";
 import { loadPersistedRun } from "./ui/run-history-loader.js";
 import { createNodePropertiesEditor } from "./ui/node-properties.js";
 import { createFileMenuController } from "./ui/file-menu.js";
+import { createZoomControls } from "./ui/zoom-controls.js";
 import { loadGraphIntoManagers } from "./graph/sample-workflows.js";
 
 function requireElementById(id) {
@@ -51,6 +52,7 @@ function init() {
 
   const canvas = requireElementById("agentCanvas");
   const host = requireElementById("canvasHost");
+  const zoomControlsRoot = requireElementById("zoomControlsRoot");
 
   const palette = new PaletteManager({
     root: paletteRoot,
@@ -67,6 +69,12 @@ function init() {
     rootEl: propertiesRoot,
     selectionManager: manager.selectionManager,
     nodeManager: manager.nodeManager,
+  });
+
+  createZoomControls({
+    rootEl: zoomControlsRoot,
+    viewport: manager.viewport,
+    canvasManager: manager,
   });
 
   const statusIndicator = createRunStatusIndicator({ element: runStatus });

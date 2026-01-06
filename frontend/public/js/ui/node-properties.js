@@ -70,6 +70,22 @@ export function createNodePropertiesEditor({ rootEl, selectionManager, nodeManag
   titleInput.type = "text";
   titleRow.append(titleLabel, titleInput);
 
+  const parentRow = el("div", "properties-row");
+  const parentLabel = el("div", "properties-label");
+  parentLabel.textContent = "Parent Container";
+  const parentInput = el("input", "properties-input");
+  parentInput.type = "text";
+  parentInput.disabled = true;
+  parentInput.placeholder = "None";
+  parentRow.append(parentLabel, parentInput);
+
+  const childrenRow = el("div", "properties-row");
+  const childrenLabel = el("div", "properties-label");
+  childrenLabel.textContent = "Children";
+  const childrenList = el("div", "properties-children-list");
+  childrenRow.append(childrenLabel, childrenList);
+  childrenRow.style.display = "none"; // Hidden by default
+
   const configRow = el("div", "properties-row");
   const configLabel = el("div", "properties-label");
   configLabel.textContent = "Config (JSON)";
@@ -84,7 +100,7 @@ export function createNodePropertiesEditor({ rootEl, selectionManager, nodeManag
 
   const errorEl = el("div", "properties-error");
 
-  rootEl.replaceChildren(title, hint, idRow, typeRow, titleRow, configRow, actions, errorEl);
+  rootEl.replaceChildren(title, hint, idRow, typeRow, titleRow, parentRow, childrenRow, configRow, actions, errorEl);
 
   let selectedNodeId = null;
   let selectedNode = null;
@@ -108,6 +124,9 @@ export function createNodePropertiesEditor({ rootEl, selectionManager, nodeManag
       idInput.value = "";
       typeInput.value = "";
       titleInput.value = "";
+      parentInput.value = "";
+      parentRow.style.display = "none";
+      childrenRow.style.display = "none";
       configTextarea.value = "";
       setEnabled(false);
       setError("");
@@ -119,6 +138,34 @@ export function createNodePropertiesEditor({ rootEl, selectionManager, nodeManag
     typeInput.value = selectedNode.type;
     titleInput.value = selectedNode.title ?? selectedNode.type;
     configTextarea.value = safeStringify(selectedNode.config);
+
+    // Show parent container for regular nodes
+    if (selectedNode.type === "container") {
+      parentRow.style.display = "none";
+      childrenRow.style.display = "block";
+
+      // Show children list for containers
+      const children = nodeManager.getNodes().filter(n => n.parentId === selectedNode.id);
+      if (children.length === 0) {
+        childrenList.innerHTML = '<div style="color: var(--text-1); font-size: 11px;">No children</div>';
+      } else {
+        childrenList.innerHTML = children.map(child =>
+          `<div style="padding: 4px 0; font-size: 11px; color: var(--text-0);">• ${child.id} (${child.type})</div>`
+        ).join("");
+      }
+    } else {
+      childrenRow.style.display = "none";
+      parentRow.style.display = "block";
+
+      // Show parent container name
+      if (selectedNode.parentId) {
+        const parent = nodeManager.getById(selectedNode.parentId);
+        parentInput.value = parent ? `${parent.title || parent.type} (${parent.id})` : selectedNode.parentId;
+      } else {
+        parentInput.value = "";
+      }
+    }
+
     setEnabled(true);
     setError("");
   }
