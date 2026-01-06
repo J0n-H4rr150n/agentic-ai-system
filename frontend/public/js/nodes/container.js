@@ -1,5 +1,8 @@
 import { BaseNode } from "./base.js";
 import { worldToScreen } from "../canvas/viewport.js";
+import { rectContainsPoint } from "../utils/geometry.js";
+
+export const CONTAINER_RESIZE_HANDLE_SIZE_WORLD = 16;
 
 export class ContainerNode extends BaseNode {
   constructor({ id, title, position, size, config } = {}) {
@@ -43,6 +46,36 @@ export class ContainerNode extends BaseNode {
     ctx.textBaseline = "top";
     ctx.fillText(this.title, 10 * viewport.scale, 10 * viewport.scale);
 
+    if (options.selected) {
+      const handleSize = CONTAINER_RESIZE_HANDLE_SIZE_WORLD * viewport.scale;
+      const pad = 4 * viewport.scale;
+      ctx.fillStyle = "#ffffff";
+      ctx.strokeStyle = "#0f172a";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.rect(width - handleSize - pad, height - handleSize - pad, handleSize, handleSize);
+      ctx.fill();
+      ctx.stroke();
+    }
+
     ctx.restore();
+  }
+
+  getResizeHandleBoundsWorld({ sizeWorld } = {}) {
+    const s = typeof sizeWorld === "number" && Number.isFinite(sizeWorld)
+      ? sizeWorld
+      : CONTAINER_RESIZE_HANDLE_SIZE_WORLD;
+
+    return {
+      x: this.position.x + this.size.width - s,
+      y: this.position.y + this.size.height - s,
+      width: s,
+      height: s,
+    };
+  }
+
+  isResizeHandleHit(worldPoint, options = {}) {
+    const bounds = this.getResizeHandleBoundsWorld({ sizeWorld: options.sizeWorld });
+    return rectContainsPoint(bounds, worldPoint);
   }
 }

@@ -1,0 +1,181 @@
+/**
+ * Minimal "File" menu controller.
+ *
+ * This module intentionally avoids hard-coding app-specific logic; callers provide
+ * callbacks for exporting JSON and importing a workflow graph.
+ */
+
+function requireElement(el, message) {
+  if (!el) {
+    throw new Error(message);
+  }
+  return el;
+}
+
+function normalizeWorkflowsResponse(result) {
+  const workflows = Array.isArray(result?.workflows) ? result.workflows : [];
+  return workflows
+    .map((w) => ({
+      workflowId: typeof w?.workflow_id === "string" ? w.workflow_id : "",
+      latestVersion: Number.isFinite(w?.latest_version) ? w.latest_version : null,
+    }))
+    .filter((w) => Boolean(w.workflowId));
+}
+
+function renderWorkflowOptions({ document, selectEl, workflows }) {
+  selectEl.replaceChildren();
+
+  if (!workflows.length) {
+    const opt = document.createElement("option");
+    opt.value = "";
+    opt.textContent = "No workflows (use Save as Node)";
+    selectEl.appendChild(opt);
+    return;
+  }
+
+  for (const wf of workflows) {
+    const opt = document.createElement("option");
+    opt.value = wf.workflowId;
+    opt.textContent =
+      typeof wf.latestVersion === "number" ? `${wf.workflowId} (v${wf.latestVersion})` : wf.workflowId;
+    selectEl.appendChild(opt);
+  }
+
+  // Default to the first workflow.
+  selectEl.value = workflows[0].workflowId;
+}
+
+/**
+ * @param {{
+ *   buttonEl: HTMLElement,
+ *   menuEl: HTMLElement,
+ *   workflowSelectEl: HTMLSelectElement,
+ *   loadWorkflowButtonEl: HTMLButtonElement,
+ *   exportJsonButtonEl: HTMLButtonElement,
+ *   workflowApi: { listWorkflows: Function, getWorkflow: Function },
+ *   onImportGraph: (graph: any) => void,
+ *   onWorkflowLoaded: (workflowId: string) => void,
+ *   onExportJson: () => void,
+ *   onResetUi?: () => void,
+ *   document?: Document,
+ * }} params
+ */
+export function createFileMenuController(params) {
+  const document = params.document ?? globalThis.document;
+
+  const buttonEl = requireElement(params.buttonEl, "buttonEl is required");
+  const menuEl = requireElement(params.menuEl, "menuEl is required");
+  const workflowSelectEl = requireElement(params.workflowSelectEl, "workflowSelectEl is required");
+  const loadWorkflowButtonEl = requireElement(params.loadWorkflowButtonEl, "loadWorkflowButtonEl is required");
+  const exportJsonButtonEl = requireElement(params.exportJsonButtonEl, "exportJsonButtonEl is required");
+
+  const workflowApi = requireElement(params.workflowApi, "workflowApi is required");
+  const onImportGraph = requireElement(params.onImportGraph, "onImportGraph is required");
+  const onWorkflowLoaded = requireElement(params.onWorkflowLoaded, "onWorkflowLoaded is required");
+  const onExportJson = requireElement(params.onExportJson, "onExportJson is required");
+  const onResetUi = params.onResetUi ?? null;
+
+  let isOpen = false;
+  let isLoadingList = false;
+
+  function setOpen(nextOpen) {
+    isOpen = Boolean(nextOpen);
+    menuEl.classList.toggle("file-menu--open", isOpen);
+    buttonEl.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    menuEl.setAttribute("aria-hidden", isOpen ? "false" : "true");
+
+    if (!isOpen) {
+      return;
+    }
+
+    // Fire-and-forget refresh; callers can also call refreshWorkflows() in tests.
+    refreshWorkflows().catch(() => {
+      // Ignore in MVP.
+    });
+  }
+
+  async function refreshWorkflows() {
+    if (isLoadingList) {
+      return;
+    }
+
+    isLoadingList = true;
+    workflowSelectEl.disabled = true;
+    loadWorkflowButtonEl.disabled = true;
+
+    try {
+      const result = await workflowApi.listWorkflows();
+      const workflows = normalizeWorkflowsResponse(result);
+      renderWorkflowOptions({ document, selectEl: workflowSelectEl, workflows });
+
+      workflowSelectEl.disabled = workflows.length === 0;
+      loadWorkflowButtonEl.disabled = workflows.length === 0;
+    } catch {
+      workflowSelectEl.replaceChildren();
+      const opt = document.createElement("option");
+      opt.value = "";
+      opt.textContent = "Failed to load";
+      workflowSelectEl.appendChild(opt);
+      workflowSelectEl.disabled = true;
+      loadWorkflowButtonEl.disabled = true;
+    } finally {
+      isLoadingList = false;
+    }
+  }
+
+  async function loadSelectedWorkflow() {
+    const workflowId = workflowSelectEl.value;
+    if (typeof workflowId !== "string" || !workflowId) {
+      return;
+    }
+
+    loadWorkflowButtonEl.disabled = true;
+
+    try {
+      const wf = await workflowApi.getWorkflow(workflowId);
+      const graph = wf?.graph ?? null;
+      if (!graph || typeof graph !== "object") {
+        return;
+      }
+
+      if (typeof onResetUi === "function") {
+        onResetUi();
+      }
+
+      onImportGraph(graph);
+      onWorkflowLoaded(workflowId);
+      setOpen(false);
+    } catch {
+      // Ignore in MVP.
+    } finally {
+      loadWorkflowButtonEl.disabled = false;
+    }
+  }
+
+  buttonEl.addEventListener("click", () => {
+    setOpen(!isOpen);
+  });
+
+  exportJsonButtonEl.addEventListener("click", () => {
+    onExportJson();
+    setOpen(false);
+  });
+
+  loadWorkflowButtonEl.addEventListener("click", async () => {
+    await loadSelectedWorkflow();
+  });
+
+  // Initialize.
+  buttonEl.setAttribute("aria-expanded", "false");
+  menuEl.setAttribute("aria-hidden", "true");
+  menuEl.classList.remove("file-menu--open");
+
+  return {
+    open: () => setOpen(true),
+    close: () => setOpen(false),
+    toggle: () => setOpen(!isOpen),
+    isOpen: () => isOpen,
+    refreshWorkflows,
+    loadSelectedWorkflow,
+  };
+}

@@ -12,7 +12,7 @@
 | Execution engine | Custom lightweight state machine (no LangGraph) |
 | Frontend | Custom HTML5 Canvas + vanilla JS (no React Flow) |
 | Backend | Python FastAPI |
-| State storage | Redis (hot) + Postgres/pgvector (cold) |
+| State storage | Redis (hot) + Postgres/pgvector (cold) (implemented; Alembic-managed) |
 | Browser automation | Playwright with shared session per run |
 | LLM integration | Provider-agnostic nodes (GCP Vertex AI default) |
 | Reusability | Save graph → becomes palette node with version history |
@@ -494,7 +494,7 @@ All tracing data stored in Postgres for analysis and debugging.
 **Goal:** Save graphs as reusable palette nodes with versioning.
 
 - [x] "Save as Node" action on containers
-- [x] Version history in Postgres
+- [x] Version history in Postgres (workflows)
 - [x] Saved agents appear in palette
 - [x] Nested execution (agent-within-agent)
 - [x] Input/output schema inference from graph
@@ -513,7 +513,29 @@ All tracing data stored in Postgres for analysis and debugging.
 - [x] Time-travel: replay from any checkpoint
 - [x] Filter/search by status, node type
 
+---
+
+### Phase 7: Persistence (Postgres + Workspaces)
+
+**Goal:** Persist workflows and UI workspaces to Postgres; standardize migrations.
+
+- [x] Postgres+pgvector Docker service
+- [x] Alembic migrations auto-run on backend container startup
+- [x] Workflows persisted to Postgres when `DATABASE_URL` is set (fallback to in-memory)
+- [x] Workspace save/load/list with version history
+
 **Deliverable:** Full observability into past runs.
+
+---
+
+### Phase 8: Workspace Editor UX
+
+**Goal:** Make the canvas editor usable for real workflows.
+
+- [x] Resize containers
+- [x] Trace viewer stays within browser window (collapsible)
+- [x] UI theme: depth + canvas/grid contrast
+- [ ] Node properties editor (view/edit/save)
 
 ---
 

@@ -6,6 +6,33 @@ All notable changes to this project will be documented in this file.
 
 ## 2026-01-05
 
+### F00009_S001: Resize Container Nodes
+- Add bottom-right resize handle for container nodes (visible when selected)
+- Drag handle resizes container with minimum size + grid snapping
+- Recalculate containment relationships after resize + add unit tests
+
+### F00009_S002: Trace Viewer Collapsible
+- Add Collapse/Expand toggle and keep trace viewer constrained within the window
+- Make trace viewer content scroll internally (no layout overflow)
+
+### F00009_S004: UI Theme (Depth + Grid Contrast)
+- Add a theme token layer via CSS variables
+- Darken sidebar and top toolbar for better visual hierarchy
+- Give the canvas a light surface so nodes read "above" the grid
+
+### F00008_S001: Postgres+pgvector + Alembic Auto-Migrations
+- Add `db` service using `pgvector/pgvector:pg16` and expose host port `36302`
+- Add Alembic scaffolding + initial migration and run `alembic upgrade head` automatically on backend container startup
+- Add SQLAlchemy/psycopg/pgvector deps in Poetry + Docker requirements
+
+### F00008_S002: DB-Backed Workflow Persistence
+- Implement Postgres-backed workflow store selected via `DATABASE_URL` (in-memory fallback for tests)
+- Keep workflow API contract unchanged and preserve nested workflow execution compatibility
+
+### F00008_S003: Workspace Persistence API
+- Add versioned workspace API: `POST/GET /api/workspace`, `GET /api/workspace/{id}`, version create/list endpoints
+- Implement Postgres-backed workspace store (in-memory fallback) + tests
+
 ### F00003_S013: Loop Control Node
 - Add `loop` control node to iterate a referenced workflow until a break condition or max iterations
 - Propagate execution mode into nested agent/loop workflow execution
@@ -30,6 +57,38 @@ All notable changes to this project will be documented in this file.
 - Add checkpoint store abstraction with in-memory default and Redis support via `REDIS_URL`
 - Persist/load/delete checkpoints during pause/resume and terminal transitions
 - Add unit tests for checkpoint stores and update backend deps
+
+## 2026-01-06
+
+### BUGFIX: Canvas Input + Trace Resizing
+- Keep trace viewer constrained during browser resize (no layout drift)
+- Make wheel scroll behave normally; zoom only on Ctrl+mousewheel
+- Add standard click+drag background panning on canvas
+- Prevent Spacebar from scrolling the page
+
+### F00009_S003: Node Properties Editor
+- Add a minimal Node Properties panel (id/type read-only; title/config editable)
+- Validate config JSON and apply edits directly to node model
+- Add unit tests for selection sync and save behavior
+
+### F00010_S001: Safe Local Lab Target Service
+- Add `lab-target` FastAPI service wired into Docker Compose on `36303`
+- Provide stable endpoints (`/`, `/api/health`, `/search`, `/status/{code}`, `/headers`, `/slow`) and unit tests
+
+### F00010_S002: Runnable Example Workflow Graphs
+- Add bug-bounty-style example graph and API-ready request payloads under `.examples/`
+- Default target is the local `lab-target` service; simulate-safe (GET + navigate)
+
+### F00011: File Menu + Workflow Loading (UI)
+- Add a slim top-bar File menu with “Load workflow” and “Export JSON”
+- Implement loading saved workflows via existing `/api/workflow` endpoints and import via `loadGraphIntoManagers`
+- Move Export JSON out of the sidebar into the menu; add unit tests for menu toggle/load/export
+
+### F00010_S003: Windows-Friendly Run Docs
+- Add `.examples/README.md` with PowerShell-friendly `curl.exe` commands
+
+### F00010_S004: Test-Mode Example Run Payload
+- Add `.examples/requests/run_bug_bounty_test.json` for deterministic `mode="test"` runs
 
 ## 2026-01-04
 

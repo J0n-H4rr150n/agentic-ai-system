@@ -1,4 +1,21 @@
 services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      - POSTGRES_DB=agentic
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "36302:5432"
+
+  lab-target:
+    build:
+      context: ./lab-target
+    ports:
+      - "36303:36303"
+    environment:
+      - PORT=36303
+
   frontend:
     build:
       context: ./frontend
@@ -17,3 +34,7 @@ services:
       - "36301:36301"
     environment:
       - PORT=36301
+      - DATABASE_URL=postgresql+psycopg://postgres:postgres@db:5432/agentic
+    depends_on:
+      - db
+      - lab-target

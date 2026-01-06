@@ -34,16 +34,16 @@ Wire everything together: frontend canvas talks to backend runner, add run contr
 - [x] Auto-scroll to current step during execution
 
 ### Sample Workflow
-- [ ] Workflow includes: Start → Browser → LLM → Router → End
-- [ ] Browser node configured with lab URL
-- [ ] LLM node analyzes page source for interesting patterns
-- [ ] Router decides next action based on LLM output
+- [x] Workflow includes: Start → Browser → LLM → Router → End
+- [x] Browser node configured with lab URL
+- [x] LLM node analyzes page source for interesting patterns
+- [x] Router decides next action based on LLM output
 
 ### End-to-End Verification
-- [ ] Workflow executes successfully against lab target
-- [ ] All steps show in trace viewer
-- [ ] Screenshots captured and viewable
-- [ ] LLM tracing visible (tokens, reasoning)
+- [x] Workflow executes successfully against lab target
+- [x] All steps show in trace viewer
+- [x] Screenshots captured and viewable
+- [x] LLM tracing visible (tokens, reasoning)
 
 ## Technical Notes
 

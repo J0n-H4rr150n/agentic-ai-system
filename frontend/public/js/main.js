@@ -11,9 +11,13 @@ import { createRunStatusIndicator, RUN_STATUSES } from "./ui/status.js";
 import { createSaveAsNodeController } from "./ui/save-as-node.js";
 import { createWorkflowStatusIndicator, WORKFLOW_SAVE_STATUSES } from "./ui/workflow-status.js";
 import { createExecutionTraceViewer } from "./ui/trace/index.js";
+import { isTraceCollapsed, setTraceCollapsed } from "./ui/trace/collapse.js";
 import { createRunHistoryApi } from "./api/run-history.js";
 import { createRunHistoryViewer } from "./ui/run-history.js";
 import { loadPersistedRun } from "./ui/run-history-loader.js";
+import { createNodePropertiesEditor } from "./ui/node-properties.js";
+import { createFileMenuController } from "./ui/file-menu.js";
+import { loadGraphIntoManagers } from "./graph/sample-workflows.js";
 
 function requireElementById(id) {
   const element = document.getElementById(id);
@@ -25,7 +29,13 @@ function requireElementById(id) {
 
 function init() {
   const paletteRoot = requireElementById("paletteRoot");
-  const exportJsonButton = requireElementById("exportJsonButton");
+  const propertiesRoot = requireElementById("propertiesRoot");
+
+  const fileMenuButton = requireElementById("fileMenuButton");
+  const fileMenu = requireElementById("fileMenu");
+  const fileMenuWorkflowSelect = requireElementById("fileMenuWorkflowSelect");
+  const fileMenuLoadButton = requireElementById("fileMenuLoadButton");
+  const fileMenuExportJsonButton = requireElementById("fileMenuExportJsonButton");
 
   const runButton = requireElementById("runButton");
   const runStatus = requireElementById("runStatus");
@@ -33,6 +43,11 @@ function init() {
   const workflowStatus = requireElementById("workflowStatus");
   const traceRoot = requireElementById("traceRoot");
   const runHistoryRoot = requireElementById("runHistoryRoot");
+  const traceToggleButton = requireElementById("traceToggleButton");
+  const workspaceEl = document.querySelector(".workspace");
+  if (!workspaceEl) {
+    throw new Error("Missing .workspace element");
+  }
 
   const canvas = requireElementById("agentCanvas");
   const host = requireElementById("canvasHost");
@@ -48,12 +63,10 @@ function init() {
   const manager = new CanvasManager({ canvas, host });
   manager.start();
 
-  exportJsonButton.addEventListener("click", () => {
-    const graph = serializeGraph({
-      nodeManager: manager.nodeManager,
-      wireManager: manager.wireManager,
-    });
-    downloadTextFile("graph.json", stringifyGraph(graph));
+  createNodePropertiesEditor({
+    rootEl: propertiesRoot,
+    selectionManager: manager.selectionManager,
+    nodeManager: manager.nodeManager,
   });
 
   const statusIndicator = createRunStatusIndicator({ element: runStatus });
@@ -174,6 +187,50 @@ function init() {
     },
   });
 
+  traceToggleButton.addEventListener("click", () => {
+    const currentlyCollapsed = isTraceCollapsed(workspaceEl);
+    const nextCollapsed = setTraceCollapsed(workspaceEl, !currentlyCollapsed);
+    traceToggleButton.textContent = nextCollapsed ? "Expand" : "Collapse";
+    traceToggleButton.setAttribute("aria-expanded", nextCollapsed ? "false" : "true");
+  });
+
+  // Sidebar collapse toggles
+  const appShell = document.querySelector(".app-shell");
+  const leftSidebarToggle = requireElementById("leftSidebarToggle");
+  const rightSidebarToggle = requireElementById("rightSidebarToggle");
+
+  leftSidebarToggle.addEventListener("click", () => {
+    const isCollapsed = appShell.classList.toggle("left-sidebar-collapsed");
+    leftSidebarToggle.textContent = isCollapsed ? "▶" : "◀";
+    leftSidebarToggle.title = isCollapsed ? "Expand sidebar" : "Collapse sidebar";
+  });
+
+  rightSidebarToggle.addEventListener("click", () => {
+    const isCollapsed = appShell.classList.toggle("right-sidebar-collapsed");
+    rightSidebarToggle.textContent = isCollapsed ? "◀" : "▶";
+    rightSidebarToggle.title = isCollapsed ? "Expand sidebar" : "Collapse sidebar";
+  });
+
+  // Trace viewer maximize
+  const traceMaximizeButton = requireElementById("traceMaximizeButton");
+  let isMaximized = false;
+
+  traceMaximizeButton.addEventListener("click", () => {
+    isMaximized = !isMaximized;
+    if (isMaximized) {
+      workspaceEl.classList.add("workspace--trace-maximized");
+      workspaceEl.classList.remove("workspace--trace-collapsed");
+      traceMaximizeButton.textContent = "🗗";
+      traceMaximizeButton.title = "Restore";
+      traceToggleButton.textContent = "Collapse";
+    } else {
+      workspaceEl.classList.remove("workspace--trace-maximized");
+      traceMaximizeButton.textContent = "⛶";
+      traceMaximizeButton.title = "Maximize";
+    }
+  });
+
+
   runButton.addEventListener("click", async () => {
     await controller.runOnce();
   });
@@ -197,6 +254,43 @@ function init() {
 
   saveAsNodeButton.addEventListener("click", async () => {
     await saveAsNodeController.save();
+  });
+
+  createFileMenuController({
+    buttonEl: fileMenuButton,
+    menuEl: fileMenu,
+    workflowSelectEl: fileMenuWorkflowSelect,
+    loadWorkflowButtonEl: fileMenuLoadButton,
+    exportJsonButtonEl: fileMenuExportJsonButton,
+    workflowApi,
+    onImportGraph: (graph) => {
+      loadGraphIntoManagers({
+        graph,
+        nodeManager: manager.nodeManager,
+        wireManager: manager.wireManager,
+      });
+      manager.selectionManager.clearSelection?.();
+    },
+    onWorkflowLoaded: (workflowId) => {
+      try {
+        localStorage.setItem("currentWorkflowId", workflowId);
+      } catch {
+        // Ignore localStorage errors in MVP.
+      }
+      workflowStatusIndicator.setStatus(WORKFLOW_SAVE_STATUSES.SAVED, { workflowId });
+      runHistoryViewer.setWorkflowId(workflowId);
+    },
+    onExportJson: () => {
+      const graph = serializeGraph({
+        nodeManager: manager.nodeManager,
+        wireManager: manager.wireManager,
+      });
+      downloadTextFile("graph.json", stringifyGraph(graph));
+    },
+    onResetUi: () => {
+      traceViewer.clear();
+      statusIndicator.setStatus(RUN_STATUSES.IDLE, { runId: null, error: null });
+    },
   });
 
   const dragDrop = new PaletteDragDropHandler({

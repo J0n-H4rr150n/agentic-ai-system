@@ -18,8 +18,13 @@ export function drawGrid(ctx, { canvasWidth, canvasHeight, viewport, gridSize })
   const { vertical, horizontal } = getGridLinePositions(boundsWorld, gridSize);
 
   ctx.save();
+
+  // Base surface (canvas "below" other UI chrome).
+  ctx.fillStyle = "#f9fafb";
+  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
   ctx.lineWidth = 1;
-  ctx.strokeStyle = "#f1f5f9";
+  ctx.strokeStyle = "#e5e7eb";
 
   ctx.beginPath();
   for (const x of vertical) {

@@ -1,0 +1,153 @@
+{
+    "graph": {
+        "version": 1,
+        "nodes": [
+            {
+                "id": "start-1",
+                "type": "start",
+                "title": "Start Exploration",
+                "position": {
+                    "x": 100,
+                    "y": 200
+                },
+                "size": {
+                    "width": 120,
+                    "height": 60
+                },
+                "ports": [
+                    {
+                        "id": "out",
+                        "kind": "output",
+                        "label": "Start"
+                    }
+                ],
+                "config": {
+                    "initial_state": {
+                        "target_url": "http://localhost:41014/",
+                        "objective": "Explore the Trading Platform and identify features"
+                    }
+                }
+            },
+            {
+                "id": "browser-1",
+                "type": "browser",
+                "title": "Navigate to Platform",
+                "position": {
+                    "x": 300,
+                    "y": 200
+                },
+                "size": {
+                    "width": 140,
+                    "height": 60
+                },
+                "ports": [
+                    {
+                        "id": "in",
+                        "kind": "input",
+                        "label": "Execute"
+                    },
+                    {
+                        "id": "out",
+                        "kind": "output",
+                        "label": "Complete"
+                    }
+                ],
+                "config": {
+                    "action": "navigate",
+                    "url": "{{target_url}}",
+                    "observation_mode": "full",
+                    "output_key": "page_data"
+                }
+            },
+            {
+                "id": "llm-1",
+                "type": "llm",
+                "title": "Analyze Page",
+                "position": {
+                    "x": 500,
+                    "y": 200
+                },
+                "size": {
+                    "width": 140,
+                    "height": 60
+                },
+                "ports": [
+                    {
+                        "id": "in",
+                        "kind": "input",
+                        "label": "Execute"
+                    },
+                    {
+                        "id": "out",
+                        "kind": "output",
+                        "label": "Complete"
+                    }
+                ],
+                "config": {
+                    "model": "gemini-2.0-flash-exp",
+                    "prompt": "Analyze this web application page.\n\nURL: {{target_url}}\nHTML: {{page_data.html_cleaned}}\n\nProvide a brief analysis in JSON:\n{\n  \"app_type\": \"what kind of app\",\n  \"has_login\": true/false,\n  \"forms_found\": [\"list\"],\n  \"next_steps\": \"what to test\"\n}",
+                    "response_format": "json",
+                    "output_key": "analysis"
+                }
+            },
+            {
+                "id": "end-1",
+                "type": "end",
+                "title": "Complete",
+                "position": {
+                    "x": 700,
+                    "y": 200
+                },
+                "size": {
+                    "width": 100,
+                    "height": 60
+                },
+                "ports": [
+                    {
+                        "id": "in",
+                        "kind": "input",
+                        "label": "Finish"
+                    }
+                ],
+                "config": {
+                    "result_key": "final_analysis"
+                }
+            }
+        ],
+        "edges": [
+            {
+                "id": "edge-1",
+                "from": {
+                    "nodeId": "start-1",
+                    "portId": "out"
+                },
+                "to": {
+                    "nodeId": "browser-1",
+                    "portId": "in"
+                }
+            },
+            {
+                "id": "edge-2",
+                "from": {
+                    "nodeId": "browser-1",
+                    "portId": "out"
+                },
+                "to": {
+                    "nodeId": "llm-1",
+                    "portId": "in"
+                }
+            },
+            {
+                "id": "edge-3",
+                "from": {
+                    "nodeId": "llm-1",
+                    "portId": "out"
+                },
+                "to": {
+                    "nodeId": "end-1",
+                    "portId": "in"
+                }
+            }
+        ]
+    }
+}

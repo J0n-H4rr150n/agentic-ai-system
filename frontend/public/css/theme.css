@@ -1,0 +1,22 @@
+:root {
+  /* Reuse existing palette colors (already used elsewhere in the repo). */
+  --surface-0: #ffffff;
+  --surface-1: #f9fafb;
+  --surface-2: #e5e7eb;
+
+  --border-0: #e5e7eb;
+  --border-1: #cbd5e1;
+
+  --text-0: #111827;
+  --text-1: #6b7280;
+
+  --accent-0: #0f172a;
+
+  /* Derived theme tokens (no new colors; built from the above). */
+  --chrome-bg: var(--text-0);
+  --chrome-fg: var(--surface-0);
+  --chrome-muted: var(--surface-2);
+  --chrome-border: var(--accent-0);
+
+  --canvas-bg: var(--surface-1);
+}

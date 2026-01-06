@@ -76,7 +76,9 @@ class LoopNode(BaseNode):
         try:
             _, selected = self._store.get(cfg.workflow_id, version=cfg.version)
         except KeyError as exc:
-            raise ValueError("Referenced workflow not found") from exc
+            raise ValueError(
+                f"LoopNode could not load workflow_id={cfg.workflow_id!r} version={cfg.version!r}"
+            ) from exc
 
         plan = parse_graph(selected.graph)
         topological_sort(plan)

@@ -11,12 +11,30 @@ export class PanZoomController {
 
     this._onKeyDown = (e) => {
       if (e.code === "Space") {
+        const target = e.target;
+        const isEditable =
+          target &&
+          (target instanceof HTMLInputElement ||
+            target instanceof HTMLTextAreaElement ||
+            (target instanceof HTMLElement && target.isContentEditable));
+        if (!isEditable) {
+          e.preventDefault();
+        }
         this._spaceDown = true;
       }
     };
 
     this._onKeyUp = (e) => {
       if (e.code === "Space") {
+        const target = e.target;
+        const isEditable =
+          target &&
+          (target instanceof HTMLInputElement ||
+            target instanceof HTMLTextAreaElement ||
+            (target instanceof HTMLElement && target.isContentEditable));
+        if (!isEditable) {
+          e.preventDefault();
+        }
         this._spaceDown = false;
         this._panning = false;
       }
@@ -30,6 +48,10 @@ export class PanZoomController {
       }
 
       e.preventDefault();
+      if (isSpaceDrag) {
+        // Space+drag should pan instead of interacting with nodes/wires.
+        e.stopImmediatePropagation();
+      }
       this._panning = true;
       this._last = { x: e.clientX, y: e.clientY };
     };
@@ -51,7 +73,11 @@ export class PanZoomController {
     };
 
     this._onWheel = (e) => {
-      // Only zoom when wheel occurs over the canvas element.
+      // Only zoom when Ctrl+wheel occurs over the canvas.
+      if (!e.ctrlKey) {
+        return;
+      }
+
       e.preventDefault();
 
       // Trackpads can send small deltas; use an exponential-ish curve.
@@ -69,7 +95,8 @@ export class PanZoomController {
     window.addEventListener("keyup", this._onKeyUp);
 
     // Pan/zoom events are on the canvas element.
-    this.element.addEventListener("mousedown", this._onMouseDown);
+    // Use capture so space+drag can intercept before selection/wire handlers.
+    this.element.addEventListener("mousedown", this._onMouseDown, { capture: true });
     window.addEventListener("mousemove", this._onMouseMove);
     window.addEventListener("mouseup", this._onMouseUp);
 
@@ -81,7 +108,7 @@ export class PanZoomController {
     window.removeEventListener("keydown", this._onKeyDown);
     window.removeEventListener("keyup", this._onKeyUp);
 
-    this.element.removeEventListener("mousedown", this._onMouseDown);
+    this.element.removeEventListener("mousedown", this._onMouseDown, { capture: true });
     window.removeEventListener("mousemove", this._onMouseMove);
     window.removeEventListener("mouseup", this._onMouseUp);
 

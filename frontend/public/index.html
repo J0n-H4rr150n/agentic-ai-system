@@ -5,22 +5,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Visual Agent IDE</title>
     <link rel="stylesheet" href="/css/base.css" />
+    <link rel="stylesheet" href="/css/theme.css" />
     <link rel="stylesheet" href="/css/layout.css" />
     <link rel="stylesheet" href="/css/canvas.css" />
   </head>
   <body>
     <div class="app-shell">
       <aside class="palette" aria-label="Palette">
-        <h1 class="app-title">Visual Agent IDE</h1>
+        <div class="sidebar-header">
+          <h1 class="app-title">Visual Agent IDE</h1>
+          <button class="sidebar-toggle" id="leftSidebarToggle" type="button" title="Collapse sidebar">◀</button>
+        </div>
         <p class="muted">Canvas grid scaffold</p>
-
-        <button class="palette-item" id="exportJsonButton" type="button">Export JSON</button>
 
         <div class="palette-root" id="paletteRoot"></div>
       </aside>
 
       <main class="workspace" aria-label="Workspace">
         <div class="toolbar" aria-label="Toolbar">
+          <div class="toolbar-menu">
+            <button
+              class="toolbar-button toolbar-button--menu"
+              id="fileMenuButton"
+              type="button"
+              aria-haspopup="true"
+              aria-expanded="false"
+            >
+              File
+            </button>
+            <div class="file-menu" id="fileMenu" role="menu" aria-hidden="true">
+              <div class="file-menu-row">
+                <label class="file-menu-label" for="fileMenuWorkflowSelect">Load workflow</label>
+                <select class="file-menu-select" id="fileMenuWorkflowSelect"></select>
+                <button class="file-menu-item" id="fileMenuLoadButton" type="button">Load</button>
+              </div>
+              <button class="file-menu-item" id="fileMenuExportJsonButton" type="button">Export JSON</button>
+            </div>
+          </div>
+
           <button class="toolbar-button" id="runButton" type="button">Run</button>
           <button class="toolbar-button" id="saveAsNodeButton" type="button">Save as Node</button>
           <div class="toolbar-status" id="runStatus" aria-live="polite">Status: idle</div>
@@ -31,11 +53,29 @@
         </div>
 
         <section class="trace-viewer" aria-label="Trace Viewer">
-          <h2 class="trace-title">Trace Viewer</h2>
-          <div id="runHistoryRoot"></div>
-          <div class="trace-root" id="traceRoot"></div>
+          <div class="trace-header">
+            <h2 class="trace-title">Trace Viewer</h2>
+            <div class="trace-actions">
+              <button class="trace-action-button" id="traceMaximizeButton" type="button" title="Maximize">⛶</button>
+              <button class="trace-toggle" id="traceToggleButton" type="button" aria-expanded="true">
+                Collapse
+              </button>
+            </div>
+          </div>
+          <div class="trace-body" id="traceBody">
+            <div id="runHistoryRoot"></div>
+            <div class="trace-root" id="traceRoot"></div>
+          </div>
         </section>
       </main>
+
+      <aside class="right-sidebar" aria-label="Properties">
+        <div class="sidebar-header">
+          <h2 class="sidebar-title">Node Properties</h2>
+          <button class="sidebar-toggle" id="rightSidebarToggle" type="button" title="Collapse sidebar">▶</button>
+        </div>
+        <div class="properties-panel" id="propertiesRoot" aria-label="Node Properties"></div>
+      </aside>
     </div>
 
     <script type="module" src="/js/main.js"></script>

@@ -15,8 +15,8 @@ body {
 body {
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   line-height: 1.4;
-  background: #ffffff;
-  color: #111827;
+  background: var(--surface-0);
+  color: var(--text-0);
 }
 
 h1 {
@@ -29,6 +29,6 @@ p {
 }
 
 .muted {
-  color: #6b7280;
+  color: var(--text-1);
   font-size: 12px;
 }

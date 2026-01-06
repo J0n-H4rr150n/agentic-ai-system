@@ -1,0 +1,156 @@
+{
+  "graph": {
+    "version": 1,
+    "nodes": [
+      {
+        "id": "start",
+        "type": "start",
+        "title": "Start (seed state)",
+        "position": { "x": 80, "y": 80 },
+        "size": { "width": 220, "height": 80 },
+        "config": {
+          "initial_state": {
+            "target_url": "http://lab-target:36303/",
+            "fuzz_template": "http://lab-target:36303/search?q={payload}",
+            "fuzz_payloads": ["one", "two", "three"],
+            "som_index_to_selector": {
+              "1": "#example"
+            }
+          }
+        }
+      },
+      {
+        "id": "fork",
+        "type": "parallel_gate",
+        "title": "Parallel Fork",
+        "position": { "x": 340, "y": 80 },
+        "size": { "width": 180, "height": 80 },
+        "config": {
+          "gate": "fork",
+          "fanout": 3,
+          "output_key": "parallel_fork"
+        }
+      },
+      {
+        "id": "browser_nav",
+        "type": "browser",
+        "title": "Browser Navigate (visual)",
+        "position": { "x": 580, "y": 20 },
+        "size": { "width": 240, "height": 80 },
+        "config": {
+          "action": "navigate",
+          "url_key": "target_url",
+          "observation_mode": "visual",
+          "output_key": "browser_nav"
+        }
+      },
+      {
+        "id": "http_probe",
+        "type": "http_request",
+        "title": "HTTP Probe (GET)",
+        "position": { "x": 580, "y": 120 },
+        "size": { "width": 220, "height": 80 },
+        "config": {
+          "method": "GET",
+          "url_key": "target_url",
+          "output_key": "http_probe"
+        }
+      },
+      {
+        "id": "fuzz_probe",
+        "type": "http_fuzzer",
+        "title": "HTTP Fuzzer (GET)",
+        "position": { "x": 580, "y": 220 },
+        "size": { "width": 220, "height": 80 },
+        "config": {
+          "method": "GET",
+          "url_template_key": "fuzz_template",
+          "payloads_key": "fuzz_payloads",
+          "output_key": "fuzz_results"
+        }
+      },
+      {
+        "id": "join",
+        "type": "parallel_gate",
+        "title": "Parallel Join",
+        "position": { "x": 860, "y": 120 },
+        "size": { "width": 180, "height": 80 },
+        "config": {
+          "gate": "join",
+          "output_key": "parallel_join"
+        }
+      },
+      {
+        "id": "triage",
+        "type": "llm",
+        "title": "Triage Summary (LLM)",
+        "position": { "x": 1100, "y": 120 },
+        "size": { "width": 240, "height": 80 },
+        "config": {
+          "model": "gemini-1.5-flash",
+          "json_mode": true,
+          "output_key": "triage",
+          "prompt": "You are analyzing an authorized, local-only security test run. Summarize the key observations from state.browser_nav, state.http_probe, and state.fuzz_results. Return JSON with keys: findings (array), risk (low|medium|high), next_steps (array)."
+        }
+      },
+      {
+        "id": "end",
+        "type": "end",
+        "title": "End",
+        "position": { "x": 1380, "y": 120 },
+        "size": { "width": 180, "height": 80 },
+        "config": {
+          "result_key": "result"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "e_start_fork",
+        "from": { "nodeId": "start", "portId": "start:out:1" },
+        "to": { "nodeId": "fork", "portId": "fork:in:1" }
+      },
+      {
+        "id": "e_fork_browser",
+        "from": { "nodeId": "fork", "portId": "fork:out:1" },
+        "to": { "nodeId": "browser_nav", "portId": "browser_nav:in:1" }
+      },
+      {
+        "id": "e_fork_http",
+        "from": { "nodeId": "fork", "portId": "fork:out:1" },
+        "to": { "nodeId": "http_probe", "portId": "http_probe:in:1" }
+      },
+      {
+        "id": "e_fork_fuzz",
+        "from": { "nodeId": "fork", "portId": "fork:out:1" },
+        "to": { "nodeId": "fuzz_probe", "portId": "fuzz_probe:in:1" }
+      },
+      {
+        "id": "e_browser_join",
+        "from": { "nodeId": "browser_nav", "portId": "browser_nav:out:1" },
+        "to": { "nodeId": "join", "portId": "join:in:1" }
+      },
+      {
+        "id": "e_http_join",
+        "from": { "nodeId": "http_probe", "portId": "http_probe:out:1" },
+        "to": { "nodeId": "join", "portId": "join:in:1" }
+      },
+      {
+        "id": "e_fuzz_join",
+        "from": { "nodeId": "fuzz_probe", "portId": "fuzz_probe:out:1" },
+        "to": { "nodeId": "join", "portId": "join:in:1" }
+      },
+      {
+        "id": "e_join_triage",
+        "from": { "nodeId": "join", "portId": "join:out:1" },
+        "to": { "nodeId": "triage", "portId": "triage:in:1" }
+      },
+      {
+        "id": "e_triage_end",
+        "from": { "nodeId": "triage", "portId": "triage:out:1" },
+        "to": { "nodeId": "end", "portId": "end:in:1" }
+      }
+    ]
+  },
+  "mode": "simulate"
+}

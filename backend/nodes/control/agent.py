@@ -53,9 +53,8 @@ class AgentNode(BaseNode):
             raise ValueError("AgentNode config.workflow_id must be a non-empty string")
 
         version = self._config.get("version")
-        if version is not None:
-            if not isinstance(version, int) or version < 1:
-                raise ValueError("AgentNode config.version must be an int >= 1 if provided")
+        if version is not None and (not isinstance(version, int) or version < 1):
+            raise ValueError("AgentNode config.version must be an int >= 1 if provided")
 
         try:
             _, selected = self._store.get(workflow_id, version=version)
