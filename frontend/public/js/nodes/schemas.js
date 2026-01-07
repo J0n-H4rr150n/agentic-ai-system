@@ -1,7 +1,57 @@
 // Node configuration schemas
-// Defines the form fields for each node type
+// Defines the form fields for each node type based on ACTUAL usage
 
 export const NODE_SCHEMAS = {
+    start: {
+        fields: [
+            {
+                key: 'initial_state.target_url',
+                label: 'Target URL',
+                type: 'url',
+                placeholder: 'http://localhost:10303/',
+                help: 'Initial URL to start the workflow'
+            }
+        ]
+    },
+
+    browser: {
+        fields: [
+            {
+                key: 'action',
+                label: 'Action',
+                type: 'select',
+                options: ['navigate', 'click', 'type', 'screenshot'],
+                default: 'navigate',
+                required: true,
+                help: 'Browser action to perform'
+            },
+            {
+                key: 'url_key',
+                label: 'URL Key',
+                type: 'text',
+                placeholder: 'target_url',
+                default: 'target_url',
+                help: 'State key containing the URL to navigate to'
+            },
+            {
+                key: 'observation_mode',
+                label: 'Observation Mode',
+                type: 'select',
+                options: ['visual', 'text', 'dom', 'hybrid'],
+                default: 'visual',
+                help: 'How to capture page content'
+            },
+            {
+                key: 'output_key',
+                label: 'Output Key',
+                type: 'text',
+                placeholder: 'browser_output',
+                default: 'browser_output',
+                help: 'State key to store browser output'
+            }
+        ]
+    },
+
     llm: {
         fields: [
             {
@@ -24,27 +74,8 @@ export const NODE_SCHEMAS = {
                 type: 'textarea',
                 placeholder: 'Enter your prompt template...',
                 rows: 4,
-                required: true
-            },
-            {
-                key: 'temperature',
-                label: 'Temperature',
-                type: 'number',
-                min: 0,
-                max: 1,
-                step: 0.1,
-                default: 0.7,
-                help: 'Controls randomness (0 = deterministic, 1 = creative)'
-            },
-            {
-                key: 'max_tokens',
-                label: 'Max Tokens',
-                type: 'number',
-                min: 1,
-                max: 8192,
-                step: 1,
-                default: 2048,
-                help: 'Maximum length of generated response'
+                required: true,
+                help: 'LLM prompt template'
             },
             {
                 key: 'json_mode',
@@ -58,48 +89,8 @@ export const NODE_SCHEMAS = {
                 label: 'Output Key',
                 type: 'text',
                 placeholder: 'llm_output',
-                help: 'Key name for storing the result in state'
-            }
-        ]
-    },
-
-    browser: {
-        fields: [
-            {
-                key: 'url',
-                label: 'URL',
-                type: 'url',
-                placeholder: 'https://example.com',
-                required: true,
-                help: 'Target URL to navigate to'
-            },
-            {
-                key: 'wait_for',
-                label: 'Wait For Selector',
-                type: 'text',
-                placeholder: 'CSS selector (optional)',
-                help: 'Wait for this element to appear before continuing'
-            },
-            {
-                key: 'screenshot',
-                label: 'Take Screenshot',
-                type: 'checkbox',
-                default: true,
-                help: 'Capture screenshot of the page'
-            },
-            {
-                key: 'extract_text',
-                label: 'Extract Text',
-                type: 'checkbox',
-                default: true,
-                help: 'Extract visible text from the page'
-            },
-            {
-                key: 'capture_network',
-                label: 'Capture Network Logs',
-                type: 'checkbox',
-                default: false,
-                help: 'Record network requests/responses'
+                default: 'llm_output',
+                help: 'State key to store LLM response'
             }
         ]
     },
@@ -107,27 +98,41 @@ export const NODE_SCHEMAS = {
     router: {
         fields: [
             {
-                key: 'condition',
-                label: 'Condition',
+                key: 'output_key',
+                label: 'Output Key',
+                type: 'text',
+                placeholder: 'router_output',
+                default: 'router_output',
+                help: 'State key to store routing decision'
+            },
+            {
+                key: 'default_output',
+                label: 'Default Output',
+                type: 'text',
+                placeholder: 'default',
+                default: 'default',
+                help: 'Default output port if no conditions match'
+            },
+            {
+                key: 'conditions',
+                label: 'Conditions (JSON Array)',
                 type: 'textarea',
-                placeholder: 'state.some_value > 10',
-                rows: 2,
-                required: true,
-                help: 'Expression to evaluate for routing decision'
-            },
+                placeholder: '[{"var": "state.value", "op": "contains", "value": "text", "output": "found"}]',
+                rows: 6,
+                help: 'Array of condition objects to evaluate (must be valid JSON)'
+            }
+        ]
+    },
+
+    end: {
+        fields: [
             {
-                key: 'true_port',
-                label: 'True Output Port',
+                key: 'result_key',
+                label: 'Result Key',
                 type: 'text',
-                default: 'true',
-                help: 'Port name when condition is true'
-            },
-            {
-                key: 'false_port',
-                label: 'False Output Port',
-                type: 'text',
-                default: 'false',
-                help: 'Port name when condition is false'
+                placeholder: 'result',
+                default: 'result',
+                help: 'State key to extract as final workflow result'
             }
         ]
     },
@@ -144,7 +149,7 @@ export const NODE_SCHEMAS = {
             },
             {
                 key: 'input_mapping',
-                label: 'Input Mapping',
+                label: 'Input Mapping (JSON)',
                 type: 'textarea',
                 placeholder: '{"prompt": "state.user_input"}',
                 rows: 3,
@@ -203,7 +208,7 @@ export const NODE_SCHEMAS = {
             },
             {
                 key: 'headers',
-                label: 'Headers',
+                label: 'Headers (JSON)',
                 type: 'textarea',
                 placeholder: '{"Authorization": "Bearer token"}',
                 rows: 3,
@@ -231,23 +236,6 @@ export const NODE_SCHEMAS = {
                 help: 'Optional description of this container\'s purpose'
             }
         ]
-    },
-
-    // Start and End nodes have minimal/no config
-    start: {
-        fields: []
-    },
-
-    end: {
-        fields: [
-            {
-                key: 'output_key',
-                label: 'Output Key',
-                type: 'text',
-                placeholder: 'result',
-                help: 'Key to extract from state as final output'
-            }
-        ]
     }
 };
 
@@ -264,7 +252,20 @@ export function getDefaultConfig(type) {
     const config = {};
     for (const field of schema.fields) {
         if (field.default !== undefined) {
-            config[field.key] = field.default;
+            // Handle nested keys like 'initial_state.target_url'
+            if (field.key.includes('.')) {
+                const parts = field.key.split('.');
+                let current = config;
+                for (let i = 0; i < parts.length - 1; i++) {
+                    if (!current[parts[i]]) {
+                        current[parts[i]] = {};
+                    }
+                    current = current[parts[i]];
+                }
+                current[parts[parts.length - 1]] = field.default;
+            } else {
+                config[field.key] = field.default;
+            }
         }
     }
     return config;
