@@ -4,6 +4,8 @@
   height: 100vh;
   min-height: 0;
   overflow: hidden;
+  color: #000000;
+  /* Default to black text everywhere */
 }
 
 .app-shell.left-sidebar-collapsed {
@@ -142,8 +144,9 @@
   padding: 8px 10px;
   border: 1px solid var(--border-0);
   border-radius: 8px;
-  background: var(--surface-0);
-  color: var(--text-0);
+  background: #ffffff;
+  color: #000000;
+  /* Always black text on white input */
   font-size: 12px;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 }
@@ -153,6 +156,13 @@
   resize: vertical;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   font-size: 11px;
+}
+
+/* Ensure select elements also have black text */
+select.properties-input,
+.properties-select {
+  background: #ffffff;
+  color: #000000;
 }
 
 .properties-actions {
@@ -173,6 +183,21 @@
 
 .properties-save:hover {
   border-color: var(--border-1);
+}
+
+.properties-delete {
+  padding: 8px 12px;
+  border: 1px solid #dc2626;
+  border-radius: 8px;
+  background: #dc2626;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.properties-delete:hover {
+  background: #b91c1c;
+  border-color: #b91c1c;
 }
 
 .properties-error {
@@ -624,8 +649,9 @@
   padding: 7px 10px;
   border: 1px solid var(--border-0);
   border-radius: 6px;
-  background: var(--surface-0);
-  color: var(--chrome-fg);
+  background: #ffffff;
+  color: #000000;
+  /* Black text on white background */
   font-size: 12px;
   font-family: system-ui, -apple-system, sans-serif;
   transition: border-color 0.15s;

@@ -46,9 +46,11 @@ export function createRenderer({ ctx, viewport, nodeManager, wireManager, wireIn
 
       if (nodeManager) {
         const selectedId = nodeManager.getSelectedNodeId?.() ?? null;
+        const highlightedContainerId = nodeManager.getHighlightedContainerId?.() ?? null;
         for (const node of nodeManager.getNodes()) {
           node.render(ctx, viewport, {
             selected: node.id === selectedId,
+            highlighted: node.id === highlightedContainerId,
             nodeManager: nodeManager
           });
         }

@@ -30,29 +30,58 @@ export class ContainerNode extends BaseNode {
       : 0;
     const titleText = childCount > 0 ? `${this.title} (${childCount})` : this.title;
 
+    // Determine visual state
+    const isEmpty = childCount === 0;
+    const isHighlighted = options.highlighted && !options.selected;
+    const isSelected = options.selected;
+
     ctx.save();
     ctx.translate(topLeft.x, topLeft.y);
 
-    ctx.fillStyle = "#ffffff";
-    ctx.globalAlpha = 0.6;
-    ctx.strokeStyle = options.selected ? "#0f172a" : "#cbd5e1";
-    ctx.lineWidth = options.selected ? 2 : 1;
-    ctx.setLineDash([6 * viewport.scale, 4 * viewport.scale]);
+    // Background - semi-transparent blue
+    ctx.fillStyle = "rgba(100, 150, 200, 0.08)";
+    ctx.globalAlpha = isHighlighted ? 1 : (isEmpty ? 0.6 : 0.8);
+    ctx.fillRect(0, 0, width, height);
+    ctx.globalAlpha = 1;
+
+    // Border - 4 distinct states
+    if (isSelected) {
+      // Selected: dark border, solid
+      ctx.strokeStyle = "#0f172a";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([]);
+    } else if (isHighlighted) {
+      // Highlighted: blue accent border when child is selected
+      ctx.strokeStyle = "#3b82f6";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([]);
+    } else if (isEmpty) {
+      // Empty: light gray, dashed
+      ctx.strokeStyle = "#cbd5e1";
+      ctx.lineWidth = 1;
+      ctx.setLineDash([6 * viewport.scale, 4 * viewport.scale]);
+    } else {
+      // Populated: medium gray, solid
+      ctx.strokeStyle = "#64748b";
+      ctx.lineWidth = 1;
+      ctx.setLineDash([]);
+    }
 
     ctx.beginPath();
     ctx.rect(0, 0, width, height);
-    ctx.fill();
     ctx.stroke();
 
+    // Reset line dash
     ctx.setLineDash([]);
-    ctx.globalAlpha = 1;
 
+    // Title text
     ctx.fillStyle = "#0f172a";
     ctx.font = `${12 * viewport.scale}px system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif`;
     ctx.textBaseline = "top";
     ctx.fillText(titleText, 10 * viewport.scale, 10 * viewport.scale);
 
-    if (options.selected) {
+    // Resize handle (only when selected)
+    if (isSelected) {
       const handleSize = CONTAINER_RESIZE_HANDLE_SIZE_WORLD * viewport.scale;
       const pad = 4 * viewport.scale;
       ctx.fillStyle = "#ffffff";

@@ -39,7 +39,14 @@ export function createZoomControls({ rootEl, viewport, canvasManager }) {
     fitBtn.title = "Fit to screen (Ctrl+0)";
     fitBtn.type = "button";
 
-    container.append(zoomInBtn, zoomDisplay, zoomOutBtn, fitBtn);
+    // Clear canvas button
+    const clearBtn = document.createElement("button");
+    clearBtn.className = "zoom-control-button zoom-control-button--wide zoom-control-button--danger";
+    clearBtn.textContent = "Clear";
+    clearBtn.title = "Clear all nodes from canvas";
+    clearBtn.type = "button";
+
+    container.append(zoomInBtn, zoomDisplay, zoomOutBtn, fitBtn, clearBtn);
     rootEl.appendChild(container);
 
     // Update zoom display
@@ -84,6 +91,12 @@ export function createZoomControls({ rootEl, viewport, canvasManager }) {
     zoomInBtn.addEventListener("click", handleZoomIn);
     zoomOutBtn.addEventListener("click", handleZoomOut);
     fitBtn.addEventListener("click", handleFit);
+    clearBtn.addEventListener("click", () => {
+        if (confirm("Clear all nodes from the canvas?\n\nThis cannot be undone.")) {
+            const nodes = [...canvasManager.nodeManager.getNodes()];
+            nodes.forEach(node => canvasManager.nodeManager.removeNode(node.id));
+        }
+    });
 
     // Keyboard shortcuts
     function handleKeyDown(e) {

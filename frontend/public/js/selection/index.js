@@ -19,6 +19,7 @@ export class SelectionManager {
     this.gridSize = gridSize;
 
     this._selectedNodeId = null;
+    this._highlightedContainerId = null; // Track parent container of selected node
     this._onSelectionChanged = null;
     this._dragging = null;
     this._resizing = null;
@@ -30,6 +31,11 @@ export class SelectionManager {
         return;
       }
       this._selectedNodeId = normalized;
+
+      // Update highlighted container based on selected node's parent
+      const selectedNode = normalized ? this.nodeManager.getById(normalized) : null;
+      this._highlightedContainerId = selectedNode?.parentId ?? null;
+
       if (typeof this._onSelectionChanged === "function") {
         this._onSelectionChanged(this._selectedNodeId);
       }
@@ -186,10 +192,37 @@ export class SelectionManager {
         this.nodeManager.updateParentForNode?.(node);
       }
     };
+
+    // Keyboard handler for Delete/Backspace
+    this._onKeyDown = (e) => {
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        // Safety: Don't delete if user is typing in an input
+        const target = e.target;
+        const isEditable =
+          target &&
+          (target instanceof HTMLInputElement ||
+            target instanceof HTMLTextAreaElement ||
+            (target instanceof HTMLElement && target.isContentEditable));
+
+        if (isEditable) {
+          return;
+        }
+
+        if (this._selectedNodeId) {
+          e.preventDefault();
+          this.nodeManager.removeNode(this._selectedNodeId);
+          this._setSelectedNodeId(null);
+        }
+      }
+    };
   }
 
   getSelectedNodeId() {
     return this._selectedNodeId;
+  }
+
+  getHighlightedContainerId() {
+    return this._highlightedContainerId;
   }
 
   setOnSelectionChanged(callback) {
@@ -207,12 +240,14 @@ export class SelectionManager {
     this.canvas.addEventListener("mousedown", this._onMouseDown);
     window.addEventListener("mousemove", this._onMouseMove);
     window.addEventListener("mouseup", this._onMouseUp);
+    window.addEventListener("keydown", this._onKeyDown);
   }
 
   detach() {
     this.canvas.removeEventListener("mousedown", this._onMouseDown);
     window.removeEventListener("mousemove", this._onMouseMove);
     window.removeEventListener("mouseup", this._onMouseUp);
+    window.removeEventListener("keydown", this._onKeyDown);
   }
 
   _eventToWorld(e) {

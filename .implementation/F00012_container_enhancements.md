@@ -1,6 +1,6 @@
 # F00012: Container Parent-Child Enhancements
 
-**Status:** In Progress
+**Status:** S001 & S002 Complete, In Progress
 **Phase:** Phase 9 (Advanced Features)
 **Depends on:** F00001 (Canvas Engine), F00009 (Workspace Editor UX)
 
@@ -14,7 +14,7 @@ Implement Alteryx-style container functionality for visual organization and sele
 
 ## Stories
 
-### F00012_S001: Parent-Child Relationship Display
+### F00012_S001: Parent-Child Relationship Display ✅ Complete
 
 **Acceptance Criteria:**
 - Node properties panel shows parent container (if any)
@@ -30,7 +30,7 @@ Implement Alteryx-style container functionality for visual organization and sele
 
 ---
 
-### F00012_S002: Visual Container Enhancements
+### F00012_S002: Visual Container Enhancements ✅ Complete
 
 **Acceptance Criteria:**
 - Containers render with semi-transparent background

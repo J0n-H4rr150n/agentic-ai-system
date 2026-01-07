@@ -43,6 +43,7 @@ export class CanvasManager {
 
     // Adapter so renderer can query selection without importing selection module.
     this.nodeManager.getSelectedNodeId = () => this.selectionManager.getSelectedNodeId();
+    this.nodeManager.getHighlightedContainerId = () => this.selectionManager.getHighlightedContainerId();
 
     this.renderer = createRenderer({
       ctx,

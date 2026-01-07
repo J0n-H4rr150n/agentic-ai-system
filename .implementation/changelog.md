@@ -4,8 +4,33 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-
 ## 2026-01-07
+
+### F00012_S002: Visual Container Enhancements
+- Implemented 4 distinct visual states for containers (empty/populated/highlighted/selected)
+- Empty containers show dashed border, populated show solid border
+- Parent container highlights with blue border when child node is selected
+- Semi-transparent blue background for all containers
+- Added highlighted container tracking in selection manager
+
+### F00013_S004: Node Deletion via Keyboard (Completed Implementation)
+- Properly attached Delete/Backspace keyboard handler (was defined but not attached)
+- Added safety checks to prevent deletion when typing in inputs/textareas
+- Keyboard listener now correctly attached in attach() and detached in detach()
+
+### F00013_S009: Delete Node Button and Clear Canvas
+- Added "Delete Node" button to properties panel with red styling
+- Added "Clear" button to zoom controls to clear entire canvas
+- Both buttons show confirmation dialogs before destructive actions
+- Implemented danger variant CSS for red delete/clear buttons
+
+### BUGFIX: CSS Text Color and JSON Display
+- Fixed white text on white background for all form inputs
+- Set explicit black text (#000000) on all inputs, textareas, and selects
+- Fixed [object Object] display in textareas by adding JSON.stringify() for display
+- Added JSON.parse() when saving textarea content back to config
+- Router node conditions field now shows editable formatted JSON
+- Established design principle: black text by default, white only on dark backgrounds
 
 ### F00013_S003: User-Friendly Workflow Naming
 - Added workflow name prompt when saving (replaces UUID-only identification)

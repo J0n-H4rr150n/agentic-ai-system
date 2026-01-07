@@ -1,4 +1,4 @@
-# F00013_S004: Node Deletion via Keyboard
+# F00013_S004: Node Deletion via Keyboard (Updated)
 
 **Status:** 🟢 Complete
 **Feature:** F00013 Canvas UI Enhancements
@@ -6,7 +6,7 @@
 
 ## Objective
 
-Allow users to delete selected nodes using the Delete or Backspace key, with safety checks to prevent accidental deletion.
+Implement keyboard deletion of selected nodes using Delete or Backspace keys, with proper safety checks to prevent accidental deletion.
 
 ## Acceptance Criteria
 
@@ -19,8 +19,8 @@ Allow users to delete selected nodes using the Delete or Backspace key, with saf
 
 ### Files Modified
 
-- `frontend/public/js/nodes/index.js` - Added removeNode method
-- `frontend/public/js/selection/index.js` - Added keyboard handler
+- `frontend/public/js/nodes/index.js` - Added `removeNode` method
+- `frontend/public/js/selection/index.js` - Added `_onKeyDown` handler
 
 ### Technical Details
 
@@ -62,9 +62,21 @@ this._onKeyDown = (e) => {
 ```
 
 **Event Attachment:**
-- Attached in `attach()` method
-- Detached in `detach()` method
+- Attached in `attach()` method: `window.addEventListener("keydown", this._onKeyDown)`
+- Detached in `detach()` method: `window.removeEventListener("keydown", this._onKeyDown)`
 - Uses window-level listener for global keyboard access
+
+## Safety Checks
+
+The implementation checks three types of editable elements:
+1. `HTMLInputElement` - Text inputs, number inputs, etc.
+2. `HTMLTextAreaElement` - Multi-line text areas
+3. `contentEditable` elements - Rich text editors
+
+This prevents accidental deletion when:
+- Typing in the node properties panel
+- Editing text in forms
+- Using Backspace to delete text
 
 ## Testing
 
@@ -73,4 +85,12 @@ this._onKeyDown = (e) => {
 ✅ Typing in input field → Delete doesn't remove node
 ✅ Typing in textarea → Backspace doesn't remove node
 ✅ Selection clears after deletion
-✅ Works with all node types
+✅ Works with all node types (including containers)
+
+## Notes
+
+This feature was initially documented as complete in an earlier session but was not actually implemented. The keyboard handler was defined but never attached to the window. This session completed the implementation by:
+1. Properly defining `_onKeyDown` in the constructor
+2. Attaching it in `attach()`
+3. Detaching it in `detach()`
+4. Adding comprehensive safety checks

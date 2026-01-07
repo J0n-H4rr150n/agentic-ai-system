@@ -4,6 +4,14 @@
   height: 100%;
 }
 
+/* Container Color Palette (for reference - used in canvas rendering)
+ * Background: rgba(100, 150, 200, 0.08) - Semi-transparent blue
+ * Border Empty: #cbd5e1 - Light gray (dashed)
+ * Border Populated: #64748b - Medium gray (solid)
+ * Border Highlighted: #3b82f6 - Blue accent (when child selected)
+ * Border Selected: #0f172a - Dark (when container selected)
+ */
+
 /* Zoom Controls */
 .zoom-controls {
   position: absolute;
@@ -46,6 +54,17 @@
 .zoom-control-button--wide {
   font-size: 11px;
   padding: 6px 12px;
+}
+
+.zoom-control-button--danger {
+  background: #dc2626;
+  color: #ffffff;
+  border-color: #dc2626;
+}
+
+.zoom-control-button--danger:hover {
+  background: #b91c1c;
+  border-color: #b91c1c;
 }
 
 .zoom-display {

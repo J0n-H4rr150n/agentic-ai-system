@@ -94,6 +94,22 @@ Implement professional canvas interaction features similar to Alteryx, Figma, an
 
 ---
 
+### F00013_S009: Delete Node Button and Clear Canvas ✅
+
+**Acceptance Criteria:**
+- "Delete Node" button in properties panel
+- "Clear" button in zoom controls next to Fit button
+- Confirmation dialogs before destructive actions
+- Red/danger styling for delete buttons
+
+**Implementation:**
+- Added Delete Node button to properties panel (`ui/node-properties.js`)
+- Added Clear button to zoom controls (`ui/zoom-controls.js`)
+- Both buttons use confirmation dialogs
+- Red styling with danger variant CSS
+
+---
+
 ## UI Improvements
 
 - Renamed "Save as Node" button to "Save" for clarity
@@ -103,6 +119,14 @@ Implement professional canvas interaction features similar to Alteryx, Figma, an
 ---
 
 ## Bug Fixes
+
+### CSS Text Color and JSON Display
+- Fixed white text on white background for all form inputs
+- Set explicit black text (#000000) on inputs, textareas, selects
+- Fixed [object Object] display in textareas by JSON.stringify() for display
+- Added JSON.parse() when saving textarea content
+- Router node conditions field now shows editable formatted JSON
+- Established principle: black text by default, white only on dark backgrounds
 
 ### Port Conflict Resolution (Windows Reserved Ports)
 - Changed all ports from 36300 range to 10300 range

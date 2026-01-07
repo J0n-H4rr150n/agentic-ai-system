@@ -44,7 +44,14 @@ function createTextInput(field, value) {
 
 function createTextarea(field, value) {
   const textarea = el("textarea", "config-form-textarea");
-  textarea.value = value ?? field.default ?? "";
+
+  // Convert objects/arrays to JSON string for display
+  let displayValue = value ?? field.default ?? "";
+  if (typeof displayValue === "object" && displayValue !== null) {
+    displayValue = JSON.stringify(displayValue, null, 2);
+  }
+
+  textarea.value = displayValue;
   textarea.placeholder = field.placeholder || "";
   textarea.rows = field.rows || 3;
   if (field.required) textarea.required = true;
@@ -197,7 +204,12 @@ export function createNodePropertiesEditor({ rootEl, selectionManager, nodeManag
   const saveButton = el("button", "properties-save");
   saveButton.type = "button";
   saveButton.textContent = "Save";
-  actions.append(saveButton);
+
+  const deleteButton = el("button", "properties-delete");
+  deleteButton.type = "button";
+  deleteButton.textContent = "Delete Node";
+
+  actions.append(saveButton, deleteButton);
 
   const errorEl = el("div", "properties-error");
 
@@ -221,6 +233,7 @@ export function createNodePropertiesEditor({ rootEl, selectionManager, nodeManag
   function setEnabled(enabled) {
     titleInput.disabled = !enabled;
     saveButton.disabled = !enabled;
+    deleteButton.disabled = !enabled;
     const formInputs = configFormContainer.querySelectorAll("input, select, textarea");
     formInputs.forEach(input => {
       input.disabled = !enabled;
@@ -246,6 +259,18 @@ export function createNodePropertiesEditor({ rootEl, selectionManager, nodeManag
         const val = parseFloat(input.value);
         if (!isNaN(val)) {
           config[key] = val;
+        }
+      } else if (fieldType === "textarea") {
+        // For textareas, try to parse as JSON (for arrays/objects)
+        const val = input.value.trim();
+        if (val) {
+          try {
+            // Try parsing as JSON first
+            config[key] = JSON.parse(val);
+          } catch (e) {
+            // If not valid JSON, store as string
+            config[key] = val;
+          }
         }
       } else {
         const val = input.value.trim();
@@ -378,6 +403,22 @@ export function createNodePropertiesEditor({ rootEl, selectionManager, nodeManag
 
     // Update the JSON textarea to reflect merged config
     configTextarea.value = safeStringify(config);
+  });
+
+  deleteButton.addEventListener("click", () => {
+    if (!selectedNodeId) {
+      return;
+    }
+    const node = nodeManager.getById(selectedNodeId);
+    if (!node) {
+      loadNode(null);
+      return;
+    }
+
+    if (confirm(`Delete node "${node.title || node.id}"?`)) {
+      nodeManager.removeNode(selectedNodeId);
+      loadNode(null);
+    }
   });
 
   selectionManager.setOnSelectionChanged((nextId) => {
