@@ -13,8 +13,8 @@ COPY . ./backend
 
 RUN chmod +x backend/entrypoint.sh
 
-ENV PORT=36301
-EXPOSE 36301
+ENV PORT=10301
+EXPOSE 10301
 
 ENTRYPOINT ["/app/backend/entrypoint.sh"]
-CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "36301"]
+CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "10301"]

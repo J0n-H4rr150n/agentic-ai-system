@@ -6,24 +6,24 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     ports:
-      - "36302:5432"
+      - "10302:5432"
 
   lab-target:
     build:
       context: ./lab-target
     ports:
-      - "36303:36303"
+      - "10303:10303"
     environment:
-      - PORT=36303
+      - PORT=10303
 
   frontend:
     build:
       context: ./frontend
     ports:
-      - "36300:36300"
+      - "10300:10300"
     environment:
-      - PORT=36300
-      - BACKEND_URL=http://backend:36301
+      - PORT=10300
+      - BACKEND_URL=http://backend:10301
     depends_on:
       - backend
 
@@ -31,9 +31,9 @@ services:
     build:
       context: ./backend
     ports:
-      - "36301:36301"
+      - "10301:10301"
     environment:
-      - PORT=36301
+      - PORT=10301
       - DATABASE_URL=postgresql+psycopg://postgres:postgres@db:5432/agentic
     depends_on:
       - db
