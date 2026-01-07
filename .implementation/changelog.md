@@ -4,6 +4,34 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+
+## 2026-01-07
+
+### F00013_S003: User-Friendly Workflow Naming
+- Added workflow name prompt when saving (replaces UUID-only identification)
+- Updated createWorkflow API call to include name field
+- Modified file menu dropdown to display workflow names instead of UUIDs
+- Updated normalizeWorkflowsResponse to extract and display workflow names
+
+### F00013_S004: Node Deletion via Keyboard
+- Added Delete/Backspace key handler to remove selected nodes
+- Implemented removeNode() method in NodeManager
+- Added safety check to prevent deletion when typing in input fields
+
+### BUGFIX: Port Conflict Resolution (Windows Reserved Ports)
+- Changed all ports from 36300 range to 10300 range to avoid Windows TCP exclusion ranges
+- Updated docker-compose.yml and Dockerfiles
+- Application now accessible at http://localhost:10300
+
+### F00013_S005: Accurate Node Configuration Schemas
+- Rewrote all node schemas in schemas.js to match actual workflow configs
+- All node types now have proper form fields matching their actual usage
+
+### UI Improvements
+- Renamed "Save as Node" button to "Save" for clarity
+
+---
+
 ## 2026-01-06
 
 ### F00013_S001 & S002: Canvas UI Enhancements
