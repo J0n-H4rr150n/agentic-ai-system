@@ -32,6 +32,32 @@ export function createRunApi(options = {}) {
     });
   }
 
+  async function getCheckpoint(runId, { signal } = {}) {
+    if (typeof runId !== "string" || !runId) {
+      throw new Error("runId must be a non-empty string");
+    }
+
+    return client.requestJson(`/run/${encodeURIComponent(runId)}/checkpoint`, {
+      method: "GET",
+      signal,
+    });
+  }
+
+  async function hitlEdit(runId, { statePatch = {}, signal } = {}) {
+    if (typeof runId !== "string" || !runId) {
+      throw new Error("runId must be a non-empty string");
+    }
+    if (!statePatch || typeof statePatch !== "object" || Array.isArray(statePatch)) {
+      throw new Error("statePatch must be an object");
+    }
+
+    return client.requestJson(`/run/${encodeURIComponent(runId)}/hitl/edit`, {
+      method: "POST",
+      json: { state_patch: statePatch },
+      signal,
+    });
+  }
+
   function getRunStreamUrl(runId) {
     if (typeof runId !== "string" || !runId) {
       throw new Error("runId must be a non-empty string");
@@ -53,6 +79,8 @@ export function createRunApi(options = {}) {
   return {
     startRun,
     getRun,
+    getCheckpoint,
+    hitlEdit,
     getRunStreamUrl,
     openRunStream,
   };

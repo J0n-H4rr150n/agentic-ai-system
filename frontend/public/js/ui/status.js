@@ -1,6 +1,7 @@
 export const RUN_STATUSES = /** @type {const} */ ({
   IDLE: "idle",
   RUNNING: "running",
+  PAUSED: "paused",
   COMPLETED: "completed",
   CANCELLED: "cancelled",
   FAILED: "failed",
@@ -16,6 +17,10 @@ export function formatRunStatusText({ status, runId = null, error = null }) {
 
   if (status === RUN_STATUSES.RUNNING) {
     return runId ? `Status: running (${runId})` : "Status: running";
+  }
+
+  if (status === RUN_STATUSES.PAUSED) {
+    return runId ? `Status: paused (${runId})` : "Status: paused";
   }
 
   if (status === RUN_STATUSES.COMPLETED) {

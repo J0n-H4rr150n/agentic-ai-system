@@ -18,6 +18,8 @@ from typing import Any, Protocol
 
 from backend.nodes.base import BaseNode
 from backend.nodes.llm.tracing import build_llm_trace
+from backend.nodes.llm.prompt_template import render_prompt_template
+from backend.nodes.llm.output_schema import parse_output_schema, validate_and_extract_fields
 
 
 @dataclass(slots=True)
@@ -74,7 +76,19 @@ class LLMCallNode(BaseNode):
             raise ValueError("LLMCallNode config.output_key must be a non-empty string")
 
         prompt = self._resolve_prompt(state)
+
+        system_prompt = self._config.get("system_prompt")
+        if system_prompt is not None:
+            if not isinstance(system_prompt, str) or not system_prompt.strip():
+                raise ValueError("LLMCallNode config.system_prompt must be a non-empty string when provided")
+            rendered_system = render_prompt_template(system_prompt, state)
+            prompt = f"System:\n{rendered_system}\n\nUser:\n{prompt}"
+
+        schema = parse_output_schema(self._config.get("output_schema"))
+
         json_mode = bool(self._config.get("json_mode", False))
+        if schema is not None:
+            json_mode = True
 
         temperature = self._config.get("temperature")
         if temperature is not None and not isinstance(temperature, (int, float)):
@@ -101,6 +115,10 @@ class LLMCallNode(BaseNode):
             except json.JSONDecodeError as exc:
                 raise ValueError("LLMCallNode expected JSON output but got non-JSON text") from exc
 
+        extracted_fields: dict[str, Any] | None = None
+        if schema is not None:
+            extracted_fields = validate_and_extract_fields(schema=schema, output_json=normalized_json)
+
         trace = build_llm_trace(usage=response.usage, elapsed_time_ms=elapsed_time_ms, payload_json=normalized_json)
         payload = {
             "model": response.model or model,
@@ -116,14 +134,20 @@ class LLMCallNode(BaseNode):
                 "llm_confidence": trace.llm_confidence,
             },
         }
-        return {output_key: payload}
+
+        out: dict[str, Any] = {output_key: payload}
+        if extracted_fields is not None:
+            for key, value in extracted_fields.items():
+                out[f"llm_{key}"] = value
+
+        return out
 
     def _resolve_prompt(self, state: dict[str, Any]) -> str:
         raw_prompt = self._config.get("prompt")
         if raw_prompt is not None:
             if not isinstance(raw_prompt, str) or not raw_prompt.strip():
                 raise ValueError("LLMCallNode config.prompt must be a non-empty string")
-            return raw_prompt
+            return render_prompt_template(raw_prompt, state)
 
         prompt_key = self._config.get("prompt_key")
         if prompt_key is None:

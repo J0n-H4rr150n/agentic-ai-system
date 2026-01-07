@@ -47,6 +47,30 @@ def test_llm_call_node_uses_config_prompt_and_model() -> None:
     assert client.calls == [{"model": "gemini-2.5-flash", "prompt": "hello", "json_mode": False, "temperature": None, "max_output_tokens": None}]
 
 
+def test_llm_call_node_renders_prompt_templates() -> None:
+    client = FakeLLMClient(LLMResponse(text="ok"))
+    node = LLMCallNode("n1", client=client, config={"model": "m", "prompt": "Analyze {{url}}"})
+
+    out = asyncio.run(node.execute({"url": "http://example.test"}))
+    assert out["llm_output"]["text"] == "ok"
+    assert client.calls[0]["prompt"] == "Analyze http://example.test"
+
+
+def test_llm_call_node_supports_system_prompt_prefix() -> None:
+    client = FakeLLMClient(LLMResponse(text="ok"))
+    node = LLMCallNode(
+        "n1",
+        client=client,
+        config={"model": "m", "system_prompt": "Be strict about JSON", "prompt": "Say hi"},
+    )
+
+    asyncio.run(node.execute({}))
+    assert "System:" in client.calls[0]["prompt"]
+    assert "Be strict about JSON" in client.calls[0]["prompt"]
+    assert "User:" in client.calls[0]["prompt"]
+    assert "Say hi" in client.calls[0]["prompt"]
+
+
 def test_llm_call_node_can_read_prompt_from_state() -> None:
     client = FakeLLMClient(LLMResponse(text="ok"))
     node = LLMCallNode(
@@ -92,4 +116,35 @@ def test_llm_call_node_requires_model() -> None:
     node = LLMCallNode("n1", client=client, config={"prompt": "hello"})
 
     with pytest.raises(ValueError, match="config.model"):
+        asyncio.run(node.execute({}))
+
+
+def test_llm_call_node_output_schema_forces_json_mode_and_extracts_fields() -> None:
+    client = FakeLLMClient(LLMResponse(json={"confidence": 0.8, "action": "click"}))
+    node = LLMCallNode(
+        "n1",
+        client=client,
+        config={
+            "model": "m",
+            "prompt": "p",
+            "json_mode": False,
+            "output_schema": '{"confidence": "number", "action": "string"}',
+        },
+    )
+
+    out = asyncio.run(node.execute({}))
+    assert client.calls[0]["json_mode"] is True
+    assert out["llm_confidence"] == 0.8
+    assert out["llm_action"] == "click"
+
+
+def test_llm_call_node_output_schema_rejects_missing_fields() -> None:
+    client = FakeLLMClient(LLMResponse(json={"confidence": 0.8}))
+    node = LLMCallNode(
+        "n1",
+        client=client,
+        config={"model": "m", "prompt": "p", "output_schema": '{"confidence": "number", "action": "string"}'},
+    )
+
+    with pytest.raises(ValueError, match="missing required output_schema field"):
         asyncio.run(node.execute({}))

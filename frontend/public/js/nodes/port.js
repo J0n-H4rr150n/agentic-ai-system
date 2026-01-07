@@ -39,8 +39,19 @@ export function createDefaultPortsForNodeType({ nodeId, type }) {
   if (type === "start") {
     return [new Port({ id: `${nodeId}:out:1`, kind: PORT_KIND.OUTPUT })];
   }
+  if (type === "input") {
+    return [new Port({ id: `${nodeId}:out:1`, kind: PORT_KIND.OUTPUT })];
+  }
   if (type === "end") {
     return [new Port({ id: `${nodeId}:in:1`, kind: PORT_KIND.INPUT })];
+  }
+
+  if (type === "human_approval") {
+    return [
+      new Port({ id: `${nodeId}:in:1`, kind: PORT_KIND.INPUT }),
+      new Port({ id: `${nodeId}:out:approved`, kind: PORT_KIND.OUTPUT, label: "approved" }),
+      new Port({ id: `${nodeId}:out:rejected`, kind: PORT_KIND.OUTPUT, label: "rejected" }),
+    ];
   }
 
   return [

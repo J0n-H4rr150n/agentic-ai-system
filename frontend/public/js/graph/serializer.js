@@ -9,6 +9,25 @@ function normalizeConfig(config) {
   return {};
 }
 
+function normalizeInterrupt(interrupt) {
+  if (!interrupt || typeof interrupt !== "object" || Array.isArray(interrupt)) {
+    return null;
+  }
+
+  const before = Boolean(interrupt.before);
+  const after = Boolean(interrupt.after);
+  if (!before && !after) {
+    return null;
+  }
+
+  const reason = typeof interrupt.reason === "string" && interrupt.reason.trim() ? interrupt.reason.trim() : null;
+  return {
+    before,
+    after,
+    reason,
+  };
+}
+
 export function serializeGraph({ nodeManager, wireManager }) {
   if (!nodeManager || typeof nodeManager.getNodes !== "function") {
     throw new Error("nodeManager must provide getNodes()");
@@ -40,6 +59,7 @@ export function serializeGraph({ nodeManager, wireManager }) {
         label: p.label ?? null,
       })),
       config: normalizeConfig(node.config),
+      interrupt: normalizeInterrupt(node.interrupt),
     };
     });
 

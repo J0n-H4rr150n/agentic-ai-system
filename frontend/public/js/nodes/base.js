@@ -33,6 +33,10 @@ export class BaseNode {
 
     this.config = config && typeof config === "object" && !Array.isArray(config) ? config : {};
 
+    // Optional HITL interrupt configuration, serialized to the backend graph.
+    // Shape: { before: boolean, after: boolean, reason?: string }
+    this.interrupt = null;
+
     // UI-only grouping metadata.
     this.parentId = null;
   }

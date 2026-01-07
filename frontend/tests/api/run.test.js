@@ -32,6 +32,32 @@ function makeFetch() {
       };
     }
 
+    if (url === "/api/run/r1/checkpoint" && options?.method === "GET") {
+      return {
+        ok: true,
+        status: 200,
+        headers: new Headers({ "content-type": "application/json" }),
+        async text() {
+          return "{\"run_id\":\"r1\",\"created_at\":\"2026-01-01T00:00:00Z\",\"state\":{},\"completed_node_ids\":[],\"ready_node_ids\":[],\"indegree\":{},\"handled_interrupts\":[]}";
+        },
+      };
+    }
+
+    if (url === "/api/run/r1/hitl/edit" && options?.method === "POST") {
+      const payload = JSON.parse(options?.body ?? "{}");
+      if (typeof payload?.state_patch !== "object") {
+        throw new Error("missing state_patch");
+      }
+      return {
+        ok: true,
+        status: 200,
+        headers: new Headers({ "content-type": "application/json" }),
+        async text() {
+          return "{\"run_id\":\"r1\",\"status\":\"running\"}";
+        },
+      };
+    }
+
     return {
       ok: false,
       status: 500,
@@ -65,6 +91,19 @@ test("createRunApi.getRun GETs status", async () => {
   const api = createRunApi({ baseUrl: "/api", fetchImpl: makeFetch() });
   const result = await api.getRun("r1");
   assert.deepEqual(result, { run_id: "r1", status: "completed" });
+});
+
+test("createRunApi.getCheckpoint GETs checkpoint", async () => {
+  const api = createRunApi({ baseUrl: "/api", fetchImpl: makeFetch() });
+  const result = await api.getCheckpoint("r1");
+  assert.equal(result.run_id, "r1");
+  assert.ok(result.state);
+});
+
+test("createRunApi.hitlEdit POSTs state_patch", async () => {
+  const api = createRunApi({ baseUrl: "/api", fetchImpl: makeFetch() });
+  const result = await api.hitlEdit("r1", { statePatch: { approval_result: "approved" } });
+  assert.deepEqual(result, { run_id: "r1", status: "running" });
 });
 
 test("createRunApi.openRunStream uses /api baseUrl", () => {

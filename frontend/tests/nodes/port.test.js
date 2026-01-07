@@ -74,3 +74,18 @@ test("getPortHitAtWorldPoint returns null when far away", () => {
 
   assert.equal(hit, null);
 });
+
+test("createDefaultPortsForNodeType returns output-only for input node", () => {
+  const ports = createDefaultPortsForNodeType({ nodeId: "n1", type: "input" });
+  assert.equal(ports.length, 1);
+  assert.equal(ports[0].id, "n1:out:1");
+  assert.equal(ports[0].kind, PORT_KIND.OUTPUT);
+});
+
+test("createDefaultPortsForNodeType returns approved/rejected outputs for human_approval", () => {
+  const ports = createDefaultPortsForNodeType({ nodeId: "n1", type: "human_approval" });
+  assert.equal(ports.length, 3);
+  assert.equal(ports[0].kind, PORT_KIND.INPUT);
+  assert.equal(ports[1].id, "n1:out:approved");
+  assert.equal(ports[2].id, "n1:out:rejected");
+});

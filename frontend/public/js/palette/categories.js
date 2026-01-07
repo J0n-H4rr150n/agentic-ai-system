@@ -9,10 +9,12 @@ export const PALETTE_CATEGORIES = [
     title: "Control",
     items: [
       { type: "start", title: "Start" },
+      { type: "input", title: "Input" },
       { type: "end", title: "End" },
       { type: "router", title: "Router" },
       { type: "loop", title: "Loop" },
       { type: "parallel_gate", title: "Parallel Gate" },
+      { type: "human_approval", title: "Human Approval" },
     ],
   },
   {

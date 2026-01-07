@@ -12,6 +12,8 @@ def test_node_registry_discover_registers_expected_types() -> None:
     for node_type in [
         "start",
         "end",
+        "input",
+        "human_approval",
         "router",
         "loop",
         "parallel_gate",

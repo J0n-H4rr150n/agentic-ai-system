@@ -52,6 +52,15 @@ export class NodeManager {
       title,
       position,
     });
+
+    if (type === "human_approval") {
+      node.interrupt = {
+        before: true,
+        after: false,
+        reason: "Human approval required",
+      };
+    }
+
     this.add(node);
     this.updateParentForNode(node);
     return node;

@@ -4,6 +4,45 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## 2026-01-07 (Evening)
+
+### F00014: Autonomous Agent Nodes (Complete)
+- **Input Node (S001):** Generic text input node for workflow parameters
+  - Added `input` node type to Control category in palette
+  - Output-only ports; writes configured value to state under custom key
+  - Backend executor: `backend/nodes/control/input.py`
+  - Tests: `backend/tests/test_nodes_input.py`
+- **Enhanced LLM Node (S002):** System prompts and structured JSON outputs
+  - Prompt templating with `{{state_path}}` syntax via `backend/nodes/llm/prompt_template.py`
+  - System prompt support (prefixed before user prompt)
+  - Output schema enforcement with per-field state extraction (`llm_{field}`)
+  - Schema parser and validator: `backend/nodes/llm/output_schema.py`
+  - Enhanced `backend/nodes/llm/base.py` with new capabilities
+  - Tests: `backend/tests/test_llm_prompt_template.py`, `backend/tests/test_llm_output_schema.py`
+- **Human Approval Node (S003):** HITL pause-and-resume workflow control
+  - Added `human_approval` node with approved/rejected output ports
+  - Leverages existing backend HITL interrupt infrastructure
+  - Frontend approval modal with countdown timer: `frontend/public/js/ui/approval-modal.js`
+  - Run controller auto-detects paused status and drives approval via `/hitl/edit`
+  - Backend executor: `backend/nodes/control/human_approval.py`
+  - Enhanced graph serialization to include `interrupt` config
+  - Added `getCheckpoint()` and `hitlEdit()` to run API client
+  - Tests: frontend run-controls test with mock approval, backend human_approval unit tests
+- **Test Results:** Backend 10/10 pass, Frontend 79/83 pass (4 pre-existing failures unrelated)
+
+## 2026-01-07 (Later)
+
+### F00014_S001 & S002: Autonomous Agent Node Types (In Progress)
+- Added Input node type for generic text/string inputs
+- Enhanced LLM node with system_prompt field
+- Enhanced LLM node with output_schema for structured JSON output
+- LLM can now output confidence, action, findings, reasoning fields
+- Enables autonomous agent workflows with observable decision-making
+
+### UX: Button Color Change
+- Changed Delete and Clear button colors from red to neutral gray
+- Less aggressive visual design for destructive actions
+
 ## 2026-01-07
 
 ### F00012_S002: Visual Container Enhancements

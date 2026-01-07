@@ -17,6 +17,8 @@ from backend.nodes.control.loop import LoopNode
 from backend.nodes.control.parallel_gate import ParallelGateNode
 from backend.nodes.control.router import RouterNode
 from backend.nodes.control.start import StartNode
+from backend.nodes.control.input import InputNode
+from backend.nodes.control.human_approval import HumanApprovalNode
 from backend.nodes.http.request import HTTPRequestNode
 from backend.nodes.http.fuzzer import HTTPFuzzerNode
 from backend.nodes.llm.base import LLMCallNode
@@ -109,6 +111,10 @@ def build_nodes_for_graph(*, run_id: str, graph_nodes: list[Any], mode: RunMode 
             created = LoopNode(node_id, run_id=run_id, store=WORKFLOW_STORE, mode=mode, config=config)
         elif node_type == "parallel_gate":
             created = ParallelGateNode(node_id, config=config)
+        elif node_type == "input":
+            created = InputNode(node_id, config=config)
+        elif node_type == "human_approval":
+            created = HumanApprovalNode(node_id, config=config)
         else:
             raise ValueError(f"Unsupported node type for node factory: {node_type}")
 

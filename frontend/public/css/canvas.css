@@ -57,14 +57,14 @@
 }
 
 .zoom-control-button--danger {
-  background: #dc2626;
-  color: #ffffff;
-  border-color: #dc2626;
+  background: var(--surface-2);
+  color: var(--text-0);
+  border-color: var(--border-1);
 }
 
 .zoom-control-button--danger:hover {
-  background: #b91c1c;
-  border-color: #b91c1c;
+  background: var(--border-1);
+  border-color: var(--text-1);
 }
 
 .zoom-display {

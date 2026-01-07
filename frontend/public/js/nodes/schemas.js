@@ -69,20 +69,36 @@ export const NODE_SCHEMAS = {
                 required: true
             },
             {
+                key: 'system_prompt',
+                label: 'System Prompt',
+                type: 'textarea',
+                placeholder: 'You are an expert web security analyst...',
+                rows: 3,
+                help: 'System-level instructions for the LLM'
+            },
+            {
                 key: 'prompt',
                 label: 'Prompt',
                 type: 'textarea',
                 placeholder: 'Enter your prompt template...',
                 rows: 4,
                 required: true,
-                help: 'LLM prompt template'
+                help: 'LLM prompt template (use {{key}} for state variables)'
+            },
+            {
+                key: 'output_schema',
+                label: 'Output Schema (JSON)',
+                type: 'textarea',
+                placeholder: '{"response": "string", "confidence": "number", "action": "string"}',
+                rows: 5,
+                help: 'Expected output structure - each field stored to state as llm_{field}'
             },
             {
                 key: 'json_mode',
                 label: 'JSON Mode',
                 type: 'checkbox',
                 default: false,
-                help: 'Force output to be valid JSON'
+                help: 'Force output to be valid JSON (auto-enabled if schema provided)'
             },
             {
                 key: 'output_key',
@@ -90,7 +106,7 @@ export const NODE_SCHEMAS = {
                 type: 'text',
                 placeholder: 'llm_output',
                 default: 'llm_output',
-                help: 'State key to store LLM response'
+                help: 'State key to store LLM response (when not using schema)'
             }
         ]
     },
@@ -234,6 +250,77 @@ export const NODE_SCHEMAS = {
                 placeholder: 'Describe what this container groups...',
                 rows: 2,
                 help: 'Optional description of this container\'s purpose'
+            }
+        ]
+    },
+
+    input: {
+        fields: [
+            {
+                key: 'label',
+                label: 'Input Label',
+                type: 'text',
+                placeholder: 'e.g., "Target URL" or "User Prompt"',
+                required: true,
+                help: 'Descriptive name for this input'
+            },
+            {
+                key: 'value',
+                label: 'Value',
+                type: 'textarea',
+                placeholder: 'Enter the input value...',
+                rows: 3,
+                required: true,
+                help: 'The actual input data'
+            },
+            {
+                key: 'output_key',
+                label: 'Output Key',
+                type: 'text',
+                placeholder: 'target_url',
+                default: 'input_value',
+                required: true,
+                help: 'State key to store this value'
+            }
+        ]
+    },
+
+    human_approval: {
+        fields: [
+            {
+                key: 'title',
+                label: 'Approval Title',
+                type: 'text',
+                placeholder: 'Review Proposed Action',
+                default: 'Human Approval Required',
+                required: true,
+                help: 'Title shown in approval prompt'
+            },
+            {
+                key: 'message',
+                label: 'Message',
+                type: 'textarea',
+                placeholder: 'The agent wants to perform the following action...',
+                rows: 3,
+                required: true,
+                help: 'Explanation of what needs approval'
+            },
+            {
+                key: 'show_state_keys',
+                label: 'State Keys to Display (JSON Array)',
+                type: 'textarea',
+                placeholder: '["llm_action", "llm_confidence", "llm_reasoning"]',
+                rows: 2,
+                help: 'Which state values to show for context (JSON array of strings)'
+            },
+            {
+                key: 'timeout_seconds',
+                label: 'Timeout (seconds)',
+                type: 'number',
+                default: 300,
+                min: 10,
+                max: 3600,
+                help: 'Auto-reject after this many seconds'
             }
         ]
     }

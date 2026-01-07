@@ -1,5 +1,6 @@
 import { RUN_STATUSES } from "./status.js";
 import { createSseStream } from "../sse/stream.js";
+import { showApprovalModal } from "./approval-modal.js";
 
 /**
  * @param {number} ms
@@ -10,6 +11,10 @@ function defaultSleep(ms) {
 
 function isTerminalStatus(status) {
   return status === RUN_STATUSES.COMPLETED || status === RUN_STATUSES.CANCELLED || status === RUN_STATUSES.FAILED;
+}
+
+function isPaused(status) {
+  return status === "paused";
 }
 
 /**
@@ -25,6 +30,7 @@ function isTerminalStatus(status) {
  *   useSse?: boolean,
  *   createSseStreamImpl?: typeof createSseStream,
  *   EventSourceImpl?: typeof EventSource,
+ *   showApprovalModalImpl?: typeof showApprovalModal,
  * }} params
  */
 export function createRunController({
@@ -39,6 +45,7 @@ export function createRunController({
   useSse = true,
   createSseStreamImpl = createSseStream,
   EventSourceImpl = typeof EventSource === "undefined" ? null : EventSource,
+  showApprovalModalImpl = showApprovalModal,
 }) {
   if (!runApi || typeof runApi.startRun !== "function" || typeof runApi.getRun !== "function") {
     throw new Error("runApi must provide startRun() and getRun()");
@@ -122,6 +129,80 @@ export function createRunController({
         }
       }
 
+      async function handlePotentialHumanApprovalPause(current) {
+        const status = current?.status;
+        if (!isPaused(status)) {
+          return false;
+        }
+
+        // Only handle interrupt pauses that provide a pending_interrupt.
+        const pauseReason = current?.pause_reason ?? null;
+        const pending = current?.pending_interrupt ?? null;
+        if (pauseReason !== "interrupt" || !pending?.node_id) {
+          return false;
+        }
+
+        // Lookup node config from the graph we started.
+        const nodeId = pending.node_id;
+        const node = (graph?.nodes ?? []).find((n) => n?.id === nodeId) ?? null;
+        if (node?.type !== "human_approval") {
+          return false;
+        }
+
+        // Pull checkpoint state for context.
+        const checkpoint = typeof runApi.getCheckpoint === "function" ? await runApi.getCheckpoint(runId) : null;
+        const state = checkpoint?.state && typeof checkpoint.state === "object" ? checkpoint.state : {};
+
+        const title = node?.config?.title ?? "Human Approval Required";
+        const message = node?.config?.message ?? "";
+        const timeoutSeconds = node?.config?.timeout_seconds ?? null;
+
+        let keys = [];
+        try {
+          const raw = node?.config?.show_state_keys;
+          keys = typeof raw === "string" && raw.trim() ? JSON.parse(raw) : [];
+        } catch {
+          keys = [];
+        }
+
+        const contextEntries = Array.isArray(keys)
+          ? keys
+              .filter((k) => typeof k === "string" && k)
+              .map((k) => ({
+                key: k,
+                valueText: (() => {
+                  const v = state[k];
+                  if (v === undefined) return "";
+                  try {
+                    return typeof v === "string" ? v : JSON.stringify(v);
+                  } catch {
+                    return String(v);
+                  }
+                })(),
+              }))
+          : [];
+
+        const approved = await showApprovalModalImpl({
+          title,
+          message,
+          contextEntries,
+          timeoutSeconds: typeof timeoutSeconds === "number" ? timeoutSeconds : null,
+        });
+
+        if (typeof runApi.hitlEdit !== "function") {
+          throw new Error("runApi must provide hitlEdit() to handle approvals");
+        }
+
+        await runApi.hitlEdit(runId, {
+          statePatch: {
+            approval_result: approved ? "approved" : "rejected",
+          },
+        });
+
+        // After HITL edit, the backend resumes; continue monitoring.
+        return true;
+      }
+
       while (true) {
         if (done) {
           return;
@@ -139,6 +220,13 @@ export function createRunController({
 
         if (status && status !== RUN_STATUSES.RUNNING) {
           onStatus(status, { runId, error });
+
+          // If we paused due to a Human Approval node, handle it and keep going.
+          const resumed = await handlePotentialHumanApprovalPause(current);
+          if (resumed) {
+            continue;
+          }
+
           stream?.close();
           return;
         }
