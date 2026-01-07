@@ -1,6 +1,7 @@
 ---
-description: 'Primary Coding Agent: Enforces CORE rules for all AI agents working on this project.'
+trigger: always_on
 ---
+
 # CORE Rules for AI Agents
 
 > **This document governs all AI agent behavior on this project.**
@@ -49,18 +50,6 @@ This is a **Visual Agent IDE** for building stateful AI agents with drag-and-dro
 2. **Update Feature doc** — Check off the completed story
 3. **Add entry to `changelog.md`** with date and summary
 4. **If Feature is complete**, update Feature status to 🟢 Complete
-
----
-
-## Dependency Management Conventions
-
-This repo intentionally uses **two** Python dependency workflows:
-
-- **Local development/testing:** use **Poetry** from the `backend/` folder.
-    - Example: `cd backend` then `poetry install` and `poetry run pytest -q`
-- **Docker images:** install Python dependencies via **pip** using `backend/requirements.txt`.
-
-If you add/remove backend dependencies, keep `backend/pyproject.toml` and `backend/requirements.txt` in sync.
 
 ---
 
@@ -393,54 +382,6 @@ Every folder with `__init__.py` or `index.js` should have a brief README or modu
 ---
 
 ## Git Practices
-
-### Core Principles
-
-- **`main` stays green**: no direct pushes; changes land via PR after tests pass.
-- **One Story Per PR**: a PR should complete exactly one story (or one bugfix).
-- **Story-first documentation**: story doc, feature doc, and changelog updates are part of “done” and belong in the same PR as the code.
-
-### Recommended Branching Model (Team GitHub)
-
-This repo is designed to merge incrementally:
-
-- **Branch per story or bugfix** (default): implement `F{XXXXX}_S{XXX}` on its own branch and PR it into `main`.
-- **Feature branches are optional**: only use a `feature/F{XXXXX}-...` long-lived branch if you truly need an integration branch across multiple stories (e.g., risky refactor, parallel workstreams). Otherwise, merge each story PR directly into `main`.
-
-### AI Agent Workflow (Required)
-
-1. **Sync from `main`**
-    - Start work from the latest `main`.
-    - Keep your branch current (prefer rebasing your own branch; never rewrite shared history).
-2. **Create a branch**
-    - Story: `story/F00002-S005-base-node-interface`
-    - Bugfix: `fix/F00002-import-paths`
-3. **Commit in logical chunks**
-    - Every commit should leave the repo in a runnable/testable state.
-    - Use the story/bugfix ID in the subject.
-4. **Before opening a PR**
-    - Run the smallest relevant test set first, then the broader suite if practical.
-    - Update docs *in the same branch*:
-      - Mark the story 🟢 Complete
-      - Check off the story in the feature doc
-      - Add a dated entry to `.implementation/changelog.md`
-      - For bugfixes, add a note under `.implementation/BUGFIXES/`
-5. **Open a PR to `main`**
-    - Title format: `F00002_S005: Base node executor interface`
-    - PR description must include:
-      - What changed (1–3 bullets)
-      - How to test (exact commands)
-      - Docs updated (story/feature/changelog links)
-6. **Address review feedback**
-    - Push follow-up commits; do not “argue via code”.
-    - Keep tests green after each iteration.
-
-### Merge Strategy
-
-- Preferred: **Squash merge** story PRs into `main` so each story lands as one coherent commit.
-  - Squash commit message should keep the story ID (e.g., `F00002_S005: ...`).
-- Acceptable: **Rebase + merge** if the team prefers linear history.
-- Avoid: merging unrelated work into a story PR; if scope grows, split into a new story.
 
 ### Commit Messages
 
