@@ -9,9 +9,7 @@ export function createRenderer({ ctx, viewport, nodeManager, wireManager, wireIn
       drawGrid(ctx, { canvasWidth, canvasHeight, viewport, gridSize: 10 });
 
       if (wireManager && nodeManager) {
-        ctx.save();
-        ctx.strokeStyle = "#cbd5e1";
-        ctx.lineWidth = 2;
+        const selectedWireId = wireManager.getSelectedWireId?.() ?? null;
 
         for (const wire of wireManager.getWires()) {
           const fromNode = nodeManager.getById(wire.from.nodeId);
@@ -33,15 +31,23 @@ export function createRenderer({ ctx, viewport, nodeManager, wireManager, wireIn
             continue;
           }
 
+          // Apply selection styling
+          const isSelected = wire.id === selectedWireId;
+          ctx.save();
+          ctx.strokeStyle = isSelected ? "#3b82f6" : "#cbd5e1";
+          ctx.lineWidth = isSelected ? 3 : 2;
           drawBezierWorld(ctx, viewport, { startWorld, endWorld });
+          ctx.restore();
         }
 
         const preview = wireInteraction?.getPreviewWire?.() ?? null;
         if (preview) {
+          ctx.save();
+          ctx.strokeStyle = "#cbd5e1";
+          ctx.lineWidth = 2;
           drawBezierWorld(ctx, viewport, preview);
+          ctx.restore();
         }
-
-        ctx.restore();
       }
 
       if (nodeManager) {

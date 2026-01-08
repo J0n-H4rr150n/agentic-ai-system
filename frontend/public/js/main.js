@@ -69,6 +69,7 @@ function init() {
     rootEl: propertiesRoot,
     selectionManager: manager.selectionManager,
     nodeManager: manager.nodeManager,
+    wireManager: manager.wireManager,
   });
 
   createZoomControls({
@@ -270,6 +271,8 @@ function init() {
     workflowSelectEl: fileMenuWorkflowSelect,
     loadWorkflowButtonEl: fileMenuLoadButton,
     exportJsonButtonEl: fileMenuExportJsonButton,
+    importJsonButtonEl: document.getElementById("fileMenuImportJsonButton"),
+    importJsonInputEl: document.getElementById("fileMenuImportJsonInput"),
     workflowApi,
     onImportGraph: (graph) => {
       loadGraphIntoManagers({

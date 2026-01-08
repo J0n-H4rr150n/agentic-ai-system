@@ -25,6 +25,7 @@ router = APIRouter()
 
 class WorkflowCreateRequest(BaseModel):
     graph: GraphDefinition
+    name: str | None = None
 
 
 class WorkflowCreatedResponse(BaseModel):
@@ -57,6 +58,7 @@ class WorkflowVersionsResponse(BaseModel):
 
 class WorkflowListItem(BaseModel):
     workflow_id: str
+    name: str | None
     latest_version: int
     created_at: datetime
     updated_at: datetime
@@ -76,7 +78,7 @@ class WorkflowSchemaResponse(BaseModel):
 
 @router.post("/api/workflow", response_model=WorkflowCreatedResponse)
 async def create_workflow(request: WorkflowCreateRequest) -> WorkflowCreatedResponse:
-    workflow_id = WORKFLOW_STORE.create(request.graph)
+    workflow_id = WORKFLOW_STORE.create(request.graph, name=request.name)
     return WorkflowCreatedResponse(workflow_id=workflow_id)
 
 
@@ -86,6 +88,7 @@ async def list_workflows() -> WorkflowListResponse:
     workflows = [
         WorkflowListItem(
             workflow_id=r.workflow_id,
+            name=r.name,
             latest_version=r.versions[-1].version if r.versions else 0,
             created_at=r.created_at,
             updated_at=r.updated_at,

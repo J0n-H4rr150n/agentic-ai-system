@@ -810,3 +810,4 @@ select.properties-input,
   margin: 12px;
   width: calc(100% - 24px);
 }
+.palette-item { position: relative; } .palette-item-tooltip { position: absolute; left: 100%; top: 50%; transform: translateY(-50%); margin-left: 12px; padding: 8px 12px; background: var(--surface-1); border: 1px solid var(--border-1); border-radius: 4px; color: var(--text-0); max-width: 280px; font-size: 11px; line-height: 1.4; pointer-events: none; opacity: 0; transition: opacity 0.15s ease-in-out; z-index: 1000; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); white-space: normal; } .palette-item:hover .palette-item-tooltip { opacity: 1; }

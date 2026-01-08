@@ -64,6 +64,7 @@ class WorkflowVersion:
 @dataclass(slots=True)
 class WorkflowRecord:
     workflow_id: str
+    name: str | None
     created_at: datetime
     updated_at: datetime
     versions: list[WorkflowVersion]
@@ -71,7 +72,7 @@ class WorkflowRecord:
 
 @runtime_checkable
 class WorkflowStore(Protocol):
-    def create(self, graph: GraphDefinition) -> str: ...
+    def create(self, graph: GraphDefinition, *, name: str | None = None) -> str: ...
 
     def create_version(self, workflow_id: str, graph: GraphDefinition) -> int: ...
 
@@ -87,11 +88,12 @@ class InMemoryWorkflowStore:
         self._lock = threading.Lock()
         self._workflows: dict[str, WorkflowRecord] = {}
 
-    def create(self, graph: GraphDefinition) -> str:
+    def create(self, graph: GraphDefinition, *, name: str | None = None) -> str:
         workflow_id = str(uuid4())
         now = _now_utc()
         record = WorkflowRecord(
             workflow_id=workflow_id,
+            name=name,
             created_at=now,
             updated_at=now,
             versions=[WorkflowVersion(version=1, created_at=now, graph=graph)],
@@ -156,7 +158,7 @@ class PostgresWorkflowStore:
     def __init__(self) -> None:
         self._engine = create_db_engine()
 
-    def create(self, graph: GraphDefinition) -> str:
+    def create(self, graph: GraphDefinition, *, name: str | None = None) -> str:
         workflow_id = str(uuid4())
         now = _now_utc()
 
@@ -168,7 +170,7 @@ class PostgresWorkflowStore:
 
         with self._engine.begin() as conn:
             conn.execute(
-                sa.insert(WorkflowRow).values(workflow_id=workflow_id, created_at=now, updated_at=now)
+                sa.insert(WorkflowRow).values(workflow_id=workflow_id, name=name, created_at=now, updated_at=now)
             )
             conn.execute(
                 sa.insert(WorkflowVersionRow).values(
@@ -222,6 +224,7 @@ class PostgresWorkflowStore:
             workflow_row = conn.execute(
                 sa.select(
                     WorkflowRow.workflow_id,
+                    WorkflowRow.name,
                     WorkflowRow.created_at,
                     WorkflowRow.updated_at,
                 ).where(WorkflowRow.workflow_id == workflow_id)
@@ -262,6 +265,7 @@ class PostgresWorkflowStore:
             selected = WorkflowVersion(version=row.version, created_at=row.created_at, graph=graph)
             record = WorkflowRecord(
                 workflow_id=workflow_row.workflow_id,
+                name=workflow_row.name,
                 created_at=workflow_row.created_at,
                 updated_at=workflow_row.updated_at,
                 versions=[selected],
@@ -310,6 +314,7 @@ class PostgresWorkflowStore:
                 conn.execute(
                     sa.select(
                         WorkflowRow.workflow_id,
+                        WorkflowRow.name,
                         WorkflowRow.created_at,
                         WorkflowRow.updated_at,
                     ).order_by(WorkflowRow.updated_at.desc())
@@ -342,6 +347,7 @@ class PostgresWorkflowStore:
                 records.append(
                     WorkflowRecord(
                         workflow_id=wf.workflow_id,
+                        name=wf.name,
                         created_at=wf.created_at,
                         updated_at=wf.updated_at,
                         versions=versions,

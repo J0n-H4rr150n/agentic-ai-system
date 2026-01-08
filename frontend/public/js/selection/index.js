@@ -12,15 +12,18 @@ import {
 } from "./resize-math.js";
 
 export class SelectionManager {
-  constructor({ canvas, viewport, nodeManager, gridSize }) {
+  constructor({ canvas, viewport, nodeManager, wireManager, gridSize }) {
     this.canvas = canvas;
     this.viewport = viewport;
     this.nodeManager = nodeManager;
+    this.wireManager = wireManager;
     this.gridSize = gridSize;
 
     this._selectedNodeId = null;
+    this._selectedWireId = null;
     this._highlightedContainerId = null; // Track parent container of selected node
     this._onSelectionChanged = null;
+    this._onWireSelectionChanged = null;
     this._dragging = null;
     this._resizing = null;
     this._panning = null;
@@ -41,6 +44,18 @@ export class SelectionManager {
       }
     };
 
+    this._setSelectedWireId = (nextId) => {
+      const normalized = nextId ?? null;
+      if (normalized === this._selectedWireId) {
+        return;
+      }
+      this._selectedWireId = normalized;
+
+      if (typeof this._onWireSelectionChanged === "function") {
+        this._onWireSelectionChanged(this._selectedWireId);
+      }
+    };
+
     this._onMouseDown = (e) => {
       // Only handle left-click selection (panning is handled elsewhere).
       if (e.button !== 0) {
@@ -57,7 +72,29 @@ export class SelectionManager {
       const hit = this.nodeManager.getNodeAtWorldPoint(world);
 
       if (!hit) {
+        // No node hit - check if we hit a wire
+        if (this.wireManager) {
+          const wireHit = this.wireManager.getWireAtPoint({
+            x: world.x,
+            y: world.y,
+            nodeManager: this.nodeManager,
+          });
+
+          if (wireHit) {
+            // Wire clicked - select it
+            this._setSelectedNodeId(null);
+            this._setSelectedWireId(wireHit.id);
+            this._dragging = null;
+            this._resizing = null;
+            this._panning = null;
+            e.preventDefault();
+            return;
+          }
+        }
+
+        // Nothing hit - clear all selections and start panning
         this._setSelectedNodeId(null);
+        this._setSelectedWireId(null);
         this._dragging = null;
         this._resizing = null;
 
@@ -67,7 +104,9 @@ export class SelectionManager {
         return;
       }
 
+      // Node clicked - clear wire selection
       this._setSelectedNodeId(hit.id);
+      this._setSelectedWireId(null);
       this.nodeManager.bringToFront(hit);
 
       this._panning = null;
@@ -231,9 +270,22 @@ export class SelectionManager {
 
   clearSelection() {
     this._setSelectedNodeId(null);
+    this._setSelectedWireId(null);
     this._dragging = null;
     this._resizing = null;
     this._panning = null;
+  }
+
+  getSelectedWireId() {
+    return this._selectedWireId;
+  }
+
+  setOnWireSelectionChanged(callback) {
+    this._onWireSelectionChanged = callback;
+  }
+
+  clearWireSelection() {
+    this._setSelectedWireId(null);
   }
 
   attach() {

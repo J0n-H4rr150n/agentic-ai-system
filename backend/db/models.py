@@ -12,6 +12,7 @@ class WorkflowRow(Base):
     __tablename__ = "workflows"
 
     workflow_id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    name: Mapped[str | None] = mapped_column(String(200), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 

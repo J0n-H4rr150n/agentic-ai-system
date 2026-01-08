@@ -17,6 +17,7 @@ function normalizeWorkflowsResponse(result) {
   return workflows
     .map((w) => ({
       workflowId: typeof w?.workflow_id === "string" ? w.workflow_id : "",
+      name: typeof w?.name === "string" && w.name ? w.name : null,
       latestVersion: Number.isFinite(w?.latest_version) ? w.latest_version : null,
     }))
     .filter((w) => Boolean(w.workflowId));
@@ -28,7 +29,7 @@ function renderWorkflowOptions({ document, selectEl, workflows }) {
   if (!workflows.length) {
     const opt = document.createElement("option");
     opt.value = "";
-        const displayName = wf.name || wf.workflowId;
+    const displayName = wf.name || wf.workflowId;
     const version = typeof wf.latestVersion === "number" ? ` (v${wf.latestVersion})` : "";
     opt.textContent = "No workflows (use Save)";
     selectEl.appendChild(opt);
@@ -38,7 +39,7 @@ function renderWorkflowOptions({ document, selectEl, workflows }) {
   for (const wf of workflows) {
     const opt = document.createElement("option");
     opt.value = wf.workflowId;
-        const displayName = wf.name || wf.workflowId;
+    const displayName = wf.name || wf.workflowId;
     const version = typeof wf.latestVersion === "number" ? ` (v${wf.latestVersion})` : "";
     opt.textContent =
       `${displayName}${version}`;
@@ -56,6 +57,8 @@ function renderWorkflowOptions({ document, selectEl, workflows }) {
  *   workflowSelectEl: HTMLSelectElement,
  *   loadWorkflowButtonEl: HTMLButtonElement,
  *   exportJsonButtonEl: HTMLButtonElement,
+ *   importJsonButtonEl: HTMLButtonElement,
+ *   importJsonInputEl: HTMLInputElement,
  *   workflowApi: { listWorkflows: Function, getWorkflow: Function },
  *   onImportGraph: (graph: any) => void,
  *   onWorkflowLoaded: (workflowId: string) => void,
@@ -72,6 +75,8 @@ export function createFileMenuController(params) {
   const workflowSelectEl = requireElement(params.workflowSelectEl, "workflowSelectEl is required");
   const loadWorkflowButtonEl = requireElement(params.loadWorkflowButtonEl, "loadWorkflowButtonEl is required");
   const exportJsonButtonEl = requireElement(params.exportJsonButtonEl, "exportJsonButtonEl is required");
+  const importJsonButtonEl = requireElement(params.importJsonButtonEl, "importJsonButtonEl is required");
+  const importJsonInputEl = requireElement(params.importJsonInputEl, "importJsonInputEl is required");
 
   const workflowApi = requireElement(params.workflowApi, "workflowApi is required");
   const onImportGraph = requireElement(params.onImportGraph, "onImportGraph is required");
@@ -118,9 +123,9 @@ export function createFileMenuController(params) {
       workflowSelectEl.replaceChildren();
       const opt = document.createElement("option");
       opt.value = "";
-          const displayName = wf.name || wf.workflowId;
-    const version = typeof wf.latestVersion === "number" ? ` (v${wf.latestVersion})` : "";
-    opt.textContent = "Failed to load";
+      const displayName = wf.name || wf.workflowId;
+      const version = typeof wf.latestVersion === "number" ? ` (v${wf.latestVersion})` : "";
+      opt.textContent = "Failed to load";
       workflowSelectEl.appendChild(opt);
       workflowSelectEl.disabled = true;
       loadWorkflowButtonEl.disabled = true;
@@ -169,6 +174,45 @@ export function createFileMenuController(params) {
 
   loadWorkflowButtonEl.addEventListener("click", async () => {
     await loadSelectedWorkflow();
+  });
+
+  // Import JSON button triggers file picker
+  importJsonButtonEl.addEventListener("click", () => {
+    importJsonInputEl.click();
+  });
+
+  // Handle file selection
+  importJsonInputEl.addEventListener("change", async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    try {
+      const text = await file.text();
+      const json = JSON.parse(text);
+
+      // Check if JSON has a "graph" wrapper or is direct graph
+      const graph = json.graph ?? json;
+
+      if (!graph || typeof graph !== "object") {
+        alert("Invalid workflow JSON: missing graph data");
+        return;
+      }
+
+      if (typeof onResetUi === "function") {
+        onResetUi();
+      }
+
+      onImportGraph(graph);
+      setOpen(false);
+
+      // Clear the input so the same file can be selected again
+      importJsonInputEl.value = "";
+    } catch (error) {
+      alert(`Failed to import JSON: ${error.message}`);
+      importJsonInputEl.value = "";
+    }
   });
 
   // Initialize.

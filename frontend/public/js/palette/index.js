@@ -23,6 +23,14 @@ function createItemButton(item) {
     button.dataset.nodeType = item.type;
   }
 
+  // Add tooltip if description exists
+  if (typeof item.description === "string" && item.description) {
+    const tooltip = document.createElement("div");
+    tooltip.className = "palette-item-tooltip";
+    tooltip.textContent = item.description;
+    button.appendChild(tooltip);
+  }
+
   return button;
 }
 

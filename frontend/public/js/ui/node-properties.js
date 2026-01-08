@@ -134,7 +134,7 @@ function createFormRow(field, config) {
   return row;
 }
 
-export function createNodePropertiesEditor({ rootEl, selectionManager, nodeManager }) {
+export function createNodePropertiesEditor({ rootEl, selectionManager, nodeManager, wireManager }) {
   if (!rootEl) {
     throw new Error("createNodePropertiesEditor: rootEl is required");
   }
@@ -149,7 +149,40 @@ export function createNodePropertiesEditor({ rootEl, selectionManager, nodeManag
   title.textContent = "Node Properties";
 
   const hint = el("div", "properties-hint");
-  hint.textContent = "Select a node to edit.";
+  hint.textContent = "Select a node or wire to edit.";
+
+  // Wire properties panel
+  const wirePanel = el("div", "wire-properties-panel");
+  wirePanel.style.display = "none";
+
+  const wireTitleEl = el("h3", "wire-title");
+  wireTitleEl.textContent = "Wire Connection";
+
+  const wireFromRow = el("div", "properties-row");
+  const wireFromLabel = el("div", "properties-label");
+  wireFromLabel.textContent = "From";
+  const wireFromValue = el("div", "properties-value");
+  wireFromRow.append(wireFromLabel, wireFromValue);
+
+  const wireToRow = el("div", "properties-row");
+  const wireToLabel = el("div", "properties-label");
+  wireToLabel.textContent = "To";
+  const wireToValue = el("div", "properties-value");
+  wireToRow.append(wireToLabel, wireToValue);
+
+  const wireIdRow = el("div", "properties-row");
+  const wireIdLabel = el("div", "properties-label");
+  wireIdLabel.textContent = "Wire ID";
+  const wireIdValue = el("input", "properties-input");
+  wireIdValue.type = "text";
+  wireIdValue.disabled = true;
+  wireIdRow.append(wireIdLabel, wireIdValue);
+
+  const wireDeleteBtn = el("button", "properties-delete");
+  wireDeleteBtn.type = "button";
+  wireDeleteBtn.textContent = "Delete Connection";
+
+  wirePanel.append(wireTitleEl, wireFromRow, wireToRow, wireIdRow, wireDeleteBtn);
 
   const idRow = el("div", "properties-row");
   const idLabel = el("div", "properties-label");
@@ -216,6 +249,7 @@ export function createNodePropertiesEditor({ rootEl, selectionManager, nodeManag
   rootEl.replaceChildren(
     title,
     hint,
+    wirePanel,
     idRow,
     typeRow,
     titleRow,
@@ -229,6 +263,7 @@ export function createNodePropertiesEditor({ rootEl, selectionManager, nodeManag
 
   let selectedNodeId = null;
   let selectedNode = null;
+  let selectedWireId = null;
 
   function setEnabled(enabled) {
     titleInput.disabled = !enabled;
@@ -426,6 +461,65 @@ export function createNodePropertiesEditor({ rootEl, selectionManager, nodeManag
       return;
     }
     loadNode(nextId);
+    if (nextId) {
+      // Node selected - hide wire panel
+      wirePanel.style.display = "none";
+      selectedWireId = null;
+    }
+  });
+
+  // Wire selection handling
+  function loadWire(wireId) {
+    selectedWireId = wireId;
+
+    if (!wireId || !wireManager) {
+      wirePanel.style.display = "none";
+      return;
+    }
+
+    const wires = wireManager.getWires();
+    const wire = wires.find(w => w.id === wireId);
+    if (!wire) {
+      wirePanel.style.display = "none";
+      return;
+    }
+
+    // Hide node properties, show wire properties
+    loadNode(null);
+    hint.style.display = "none";
+    wirePanel.style.display = "block";
+
+    // Populate wire info
+    wireIdValue.value = wire.id;
+
+    const fromNode = nodeManager.getById(wire.from.nodeId);
+    const toNode = nodeManager.getById(wire.to.nodeId);
+
+    wireFromValue.textContent = fromNode
+      ? `${fromNode.title || fromNode.type} (${wire.from.portId})`
+      : `${wire.from.nodeId} (${wire.from.portId})`;
+
+    wireToValue.textContent = toNode
+      ? `${toNode.title || toNode.type} (${wire.to.portId})`
+      : `${wire.to.nodeId} (${wire.to.portId})`;
+  }
+
+  if (selectionManager.setOnWireSelectionChanged) {
+    selectionManager.setOnWireSelectionChanged((wireId) => {
+      loadWire(wireId);
+    });
+  }
+
+  wireDeleteBtn.addEventListener("click", () => {
+    if (!selectedWireId || !wireManager) {
+      return;
+    }
+    if (confirm("Delete this connection?")) {
+      wireManager.removeWire(selectedWireId);
+      selectionManager.clearWireSelection?.();
+      loadWire(null);
+      hint.style.display = "block";
+    }
   });
 
   // Initialize from current selection

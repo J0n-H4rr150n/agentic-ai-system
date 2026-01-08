@@ -38,12 +38,14 @@ export class CanvasManager {
       canvas,
       viewport: this.viewport,
       nodeManager: this.nodeManager,
+      wireManager: this.wireManager,
       gridSize: 10,
     });
 
     // Adapter so renderer can query selection without importing selection module.
     this.nodeManager.getSelectedNodeId = () => this.selectionManager.getSelectedNodeId();
     this.nodeManager.getHighlightedContainerId = () => this.selectionManager.getHighlightedContainerId();
+    this.wireManager.getSelectedWireId = () => this.selectionManager.getSelectedWireId();
 
     this.renderer = createRenderer({
       ctx,
